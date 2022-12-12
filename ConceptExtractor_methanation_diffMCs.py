@@ -5,6 +5,12 @@ Created on Fri Jul 29 15:19:03 2022
 @author: Alexander S. Behr
 """
 
+##
+#Loads semantic artifacts, loads text-pickle and trains w2v model with desired min_counts 
+#outputs list of token and definitions based on min_count list as excel-file
+##
+
+
 import owlready2
 import json
 import LocalOntologies
@@ -20,12 +26,6 @@ import w2v_training
 
 #[class_dict, desc_dict] = OntoClassSearcher.onto_loader(["chmo","Allotrope_OWL"])#, "chebi"])
 [class_dict, desc_dict] = OntoClassSearcher.onto_loader(["bao_complete_merged", "Allotrope_OWL", "chebi", "chmo", "NCIT", "SBO"])
-
-#####
-# TODO: INCLUDE FOR LOOP, that iterates through different w2v models' concept lists
-
-# TODO: ALPHA variieren in w2v models + cluster visualisieren!
-#####
 
 ## LOADING IUPAC GOLDBOOK 
 temp_dict = {}
@@ -116,8 +116,8 @@ for min_count in min_count_list:
                 df_concepts.loc[getattr(df_concepts, "MC {}".format(min_count)) == j, i] =  j # changes entry in ontology column to definition, when in concepts
     
     #save dataframe as excel sheet
-    df_concepts.to_excel(output_file_name + '.xlsx') 
-    print('Stored common concepts and definitions in {}'.format(output_file_name + '.xlsx'))
+    df_concepts.to_excel('./xlsx-files/' + output_file_name + '.xlsx') 
+    print('Stored common concepts and definitions in ./xlsx-files/{}'.format(output_file_name + '.xlsx'))
     
     # replaces empty strings with NaN entries
     df_conceps_nan = df_concepts.replace(r'^\s*$', np.nan, regex=True)
@@ -134,8 +134,9 @@ for min_count in min_count_list:
 with open('concept_statistics_diffMCs.json', 'w') as f:
     json.dump(statistics_dict_res, f)
 """
-pd.DataFrame(statistics_dict_res).to_excel("concept_statistics_diffMCs.xlsx")
-
+pd.DataFrame(statistics_dict_res).to_excel("./xlsx-files/concept_statistics_diffMCs.xlsx")
+print('Stored statistics for each loop in ./xlsx-files/concept_statistics_diffMCs.xlsx')
+    
 
     
     

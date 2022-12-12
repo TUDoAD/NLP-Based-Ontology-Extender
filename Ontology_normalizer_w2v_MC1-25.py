@@ -5,15 +5,9 @@ Created on Mon Aug 22 13:35:02 2022
 @author: Alexander Behr 
 """
 
-#TODO:
-"""
-IUPAC GOLDBOOK NOCH IMPLEMENTIEREN!
--> Dazu json zu desc_dict umbauen?
-
-REGULAR EXPRESSIONS anschauen
-https://docs.python.org/3/library/re.html#regular-expression-syntax
-
-"""
+##
+# Annotates classes in extended ontology with definitions
+##
 
 
 from owlready2 import *
