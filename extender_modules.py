@@ -622,28 +622,20 @@ def ConceptExtractor_methanation_diffMCs(ontology_filenames = ["Allotrope_OWL"],
     
     with open('./pickle/'+preprocessed_text_pickle_name+'.pickle', 'rb') as pickle_file:
         content = pickle.load(pickle_file)
-        
-    
-    #min_count_list = [1,5,10,25,50,100]
-    
-    
+
+
     for min_count in min_count_list:
         print('Training Word2Vec with mincount = {}...'.format(min_count))
         model = create_model(content, min_count)
-        name_model = 'methanation_only_text' + '_mc' + str(min_count)
+        name_model = preprocessed_text_pickle_name + '_mc' + str(min_count)
         model.save('./models/' + name_model)
         print('Done!')
     
-        word_list = model.wv.index_to_key
+    ## AB HIER WEITER
     
-        #file_name = "methanation_mc10_searched"
-        output_file_name = "conceptsMC{}_definitions".format(min_count)
-        #df_concepts = pd.read_excel(file_name + '.xlsx')
-        #df_concepts.drop(df_concepts.columns.difference([file_name + '.xlsx','methanation_mc10_prep']),1,inplace =True)
-        
+        word_list = model.wv.index_to_key        
+        output_file_name = "conceptsMC{}_definitions".format(min_count)            
         df_concepts = pd.DataFrame({"MC {}".format(min_count) :  word_list})
-        
-        #word_list = list(df_concepts['methanation_mc10_prep'])
         
         statistics_dict = {}
         resDict = {}
