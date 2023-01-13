@@ -578,6 +578,22 @@ def ConceptExtractor_methanation_diffMCs(ontology_filenames = ["Allotrope_OWL"],
     """
     Loads semantic artifacts, loads text-pickle and trains w2v model with desired
     min_counts outputs list of token and definitions based on min_count list as excel-file
+
+    Parameters
+    ----------
+    ontology_filenames : TYPE, optional
+        DESCRIPTION. The default is ["Allotrope_OWL"].
+    use_IUPAC_goldbook : TYPE, optional
+        DESCRIPTION. The default is True.
+    min_count_list : TYPE, optional
+        DESCRIPTION. The default is [1].
+    preprocessed_text_pickle_name : TYPE, optional
+        DESCRIPTION. The default is "methanation_only_text".
+
+    Returns
+    -------
+    None.
+
     """
     
     
