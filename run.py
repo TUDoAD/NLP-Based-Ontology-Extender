@@ -17,3 +17,11 @@ import extender_modules
 extender_modules.textmining("test")
 
 
+##
+# 
+
+Onto_filenames = ["bao_complete_merged", "Allotrope_OWL", "chebi", "chmo", "NCIT", "SBO"]
+min_counts_list = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,50,100]   
+use_IUPAC_goldbook = True
+
+extender_modules.ConceptExtractor_methanation_diffMCs(Onto_filenames, use_IUPAC_goldbook, min_counts_list)
