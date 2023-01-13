@@ -18,7 +18,6 @@ Klassen raussuchen, Word2Vec oder aehnliches auf Klassen anwenden.
 from owlready2 import *
 
 import LocalOntologies
-from tqdm import tqdm
 import pandas as pd
 import random
 
