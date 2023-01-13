@@ -1,1 +1,1 @@
-Folder for storing the PDF files
+Directory for storing the PDF files
