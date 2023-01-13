@@ -8,7 +8,7 @@
 #data_preprocessing_spacy -> preprocesses extracted data, saves as pickle
 #w2v_training.py -> trains w2v model
 
-ConceptExtractor_methanation_diffMCs.py -> Loads semantic artifacts, loads text-pickle and trains w2v model with desired min_counts outputs list of token and definitions based on min_count list as excel-file
+--ConceptExtractor_methanation_diffMCs.py -> Loads semantic artifacts, loads text-pickle and trains w2v model with desired min_counts outputs list of token and definitions based on min_count list as excel-file
 
 Ontology_normalizer_w2v_MC1-25.py -> Annotates classes in extended ontology with definitions
 
