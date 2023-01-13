@@ -32,14 +32,25 @@ from tqdm import tqdm
 import numpy as np
 import pickle
 
-## 
-# textmining - used for retrieval of text data from pdfs stored in ./import/
-# subdir. 
-# Preprocessed text containing only noun and propnoun token stored in 
-# pickle with name "name" in subdir ./pickle/.
-# Raw read-in text stored as pickle "name_raw" in subdir ./pickle/.
-##
+####
+
 def textmining(name):
+    """
+    textmining - used for retrieval of text data from pdfs stored in ./import/ subdir. 
+    Preprocessed text containing only noun and propnoun token stored in 
+    pickle with name "name" in subdir ./pickle/.
+    Raw read-in text stored as pickle "name_raw" in subdir ./pickle/.
+
+    Parameters
+    ----------
+    name : TYPE
+        DESCRIPTION.
+
+    Returns
+    -------
+    None.
+
+    """
     name_raw = name + "_raw"
 
     # extracting text out of PDF files and save string
@@ -55,10 +66,21 @@ def textmining(name):
     print('Done!')
     #eg-use: textmining("methanation_mc1")
 
-##
-# extract content from pdf file, returns text as string
-##
 def get_pdf_file_content(pdf_file):
+    """
+    extracts content from pdf file, returns text as string . 
+
+    Parameters
+    ----------
+    pdf_file : TYPE
+        DESCRIPTION.
+
+    Returns
+    -------
+    text : TYPE
+        DESCRIPTION.
+
+    """
     # extract the text of PDF-files
     # used to store resources in the PDF, for example images
     resource_manager = PDFResourceManager(caching=True)
@@ -81,10 +103,16 @@ def get_pdf_file_content(pdf_file):
     out_text.close()
     return text
 
-##
-# uses glob2 package to retrieve all .pdf files stored in subdir ./import/
-##
 def get_globed_content():
+    """
+    uses glob2 package to retrieve all .pdf files stored in subdir ./import/
+
+    Returns
+    -------
+    pdf_text_string : TYPE
+        DESCRIPTION.
+
+    """
     # pdf data extraction
     # opens all PDF files stored in directory ./import, 
     # hands it to get_pdf_file_content function and converts it 
@@ -96,38 +124,85 @@ def get_globed_content():
     pdf_text_string = ''.join(pdf_text)
     return pdf_text_string
 
-##
-# used to store data as pickle in subdir ./pickle/
-##
 def save_pickle(pdf_data, pickle_name):
+    """
+    stores data as pickle in subdir ./pickle/
+
+    Parameters
+    ----------
+    pdf_data : TYPE
+        DESCRIPTION.
+    pickle_name : TYPE
+        DESCRIPTION.
+
+    Returns
+    -------
+    None.
+
+    """
     with open('./pickle/' + pickle_name + '.pickle', 'wb') as handle:
         pickle.dump(pdf_data, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
-##
-# used to read stored pickle data from subdir ./pickle/
-##
 def load_pickle(pickle_name):
+    """
+    reads stored pickle data from subdir ./pickle/    
+    Parameters
+    ----------
+    pickle_name : TYPE
+        DESCRIPTION.
+
+    Returns
+    -------
+    data_open : TYPE
+        DESCRIPTION.
+    """
     with open('./pickle/' + pickle_name + '.pickle', 'rb') as handle:
         data_open = pickle.load(handle)
     return data_open
 
-##
-# Trains word2vec model based on preprocessed_data (lists of token)
-# and based on minc = min_count parameter, which limits the amount of 
-# minimal repetitions a token has to have in the text dataset.
-# Outputs respective word2vec model
-##
+
 def create_model(preprocessed_data, minc):
+    """
+    Trains word2vec model based on preprocessed_data (lists of token)
+    and based on minc = min_count parameter, which limits the amount of 
+    minimal repetitions a token has to have in the text dataset.
+    Outputs respective word2vec model
+
+
+    Parameters
+    ----------
+    preprocessed_data : TYPE
+        DESCRIPTION.
+    minc : TYPE
+        DESCRIPTION.
+
+    Returns
+    -------
+    model : TYPE
+        DESCRIPTION.
+
+    """
 
     model = Word2Vec(preprocessed_data, vector_size=300, alpha=0.025, min_count=minc)
 
     return model
 
-##
-# function that tests if a token is important for POS-tagging 
-# here, only NOUN and PROPNOUN tokens are considered.
-##
 def is_relevant(token):
+    """
+    tests if a token is important for POS-tagging 
+    here, only NOUN and PROPNOUN tokens are considered.
+
+    Parameters
+    ----------
+    token : TYPE
+        DESCRIPTION.
+
+    Returns
+    -------
+    bool
+        DESCRIPTION.
+
+    """
     # NOUN - nouns; PROPN - proper noun; VERB - verbs; ADJ - adjective; NUM - number; PUNCT - punctuation
     pos_tags = ['NOUN', 'PROPN']
     if token.pos_ in pos_tags:
@@ -135,10 +210,22 @@ def is_relevant(token):
     else:
         return False
 
-##
-# function that tests if a token is important by comparison to waste list
-##
+
 def is_datawaste(token):
+    """
+    tests if a token is important by comparison to waste list.
+
+    Parameters
+    ----------
+    token : TYPE
+        DESCRIPTION.
+
+    Returns
+    -------
+    bool
+        DESCRIPTION.
+
+    """
     waste = ['fig', 'figure', 'table', 'tab', 'site', 'min', 'max', 'number', 'vol.%', 'xxx', 'mmo', 'ghsv', 'usy',
              'use', 'article', 'tpr', 'image', 'idh', 'con-', 'scr', 'igm', 'author', 'xps', 'lyst', 'cdpr', 'mpa',
              'ref', 'ppm', 'wt.%', 'cm-1', 'pro-', 'ml-1', 're-', 'rng', 'ptg', 'rsc', 'sbcr', 'sci', 'wiley', 'vch',
@@ -169,11 +256,22 @@ def is_datawaste(token):
     else:
         return False
 
-##
-# preprocesses extracted text data, returns tokenized list of words acc. to
-# token classes specified in function is_relevant(token).
-##
 def preprocessing(pdf_data):
+    """
+    preprocesses extracted text data, returns tokenized list of words acc. to
+    token classes specified in function is_relevant(token).
+    
+    Parameters
+    ----------
+    pdf_data : TYPE
+        DESCRIPTION.
+
+    Returns
+    -------
+    sentences_lem : TYPE
+        DESCRIPTION.
+
+    """
     # function for preprocessing pdf_data with spacy module
     # import spacy library
     lib = spacy.load('en_core_web_sm')
@@ -237,33 +335,67 @@ def preprocessing(pdf_data):
 # Begin of ontology related functions
 #####
 
-##
-# loads an ontology from subfolder ontologies defined by its name 
-# outputs list of classes contained in this ontology  
-##
 def load_ontologies(onto_name):
+    """
+    loads an ontology from subfolder ontologies defined by its name 
+    outputs list of classes contained in this ontology  
+
+    Parameters
+    ----------
+    onto_name : TYPE
+        DESCRIPTION.
+
+    Returns
+    -------
+    onto_class_list : TYPE
+        DESCRIPTION.
+
+    """
     new_world = owlready2.World()
     onto = new_world.get_ontology("./ontologies/{}.owl".format(onto_name)).load()
     onto_class_list = list(new_world.classes())
     print("Loading {} done. Imported {} classes.".format(onto_name, len(onto_class_list)))
     return onto_class_list 
 
-
-## 
-# definition error used in function description_dicts to return string,
-# when class definition strings could not be extracted properly
-## 
 class definitionError(Exception):
+    """ 
+    definition error used in function description_dicts to return string,
+    when class definition strings could not be extracted properly
+    """ 
     pass
     
-##
-# extracts class names and descriptions based on class list (as owlready2 object)
-# returns dictionary with general structure of 
-# desc_dict = {ontology_class_label : Definition string}
-# WARNING: Descriptions often have different identifiers (see try:... except loop)
-#          Implemented IAO_0000115 and .comment for now. 
-##
+
 def description_dicts(class_list, onto_name):
+    """
+    extracts class names and descriptions based on class list (as owlready2 object)
+    returns dictionary with general structure of 
+    desc_dict = {ontology_class_label : Definition string}
+    WARNING: Descriptions often have different identifiers (see try:... except loop)
+          Implemented IAO_0000115 and .comment for now. 
+
+    example: [class_dict, desc_dict] = onto_loader(["chmo","Allotrope_OWL", "chebi"])
+    execute once to load all ontologies from list    
+
+    Parameters
+    ----------
+    class_list : TYPE
+        DESCRIPTION.
+    onto_name : TYPE
+        DESCRIPTION.
+
+    Raises
+    ------
+    print
+        DESCRIPTION.
+    definitionError
+        DESCRIPTION.
+
+    Returns
+    -------
+    desc_dict : TYPE
+        DESCRIPTION.
+
+    """
     print("Extracting class descriptions...")
     desc_dict = {}
     N_cl = len(class_list)
@@ -330,13 +462,22 @@ def description_dicts(class_list, onto_name):
     print("Done.")
     return desc_dict
 
-
-##    
-# Loading ontologies
-# and storing classes and their descriptions in dictionaries
-##
 def onto_loader(onto_names):        
+    """
+    Loading ontologies and storing classes and their descriptions in dictionaries.
+    Parameters
+    ----------
+    onto_names : TYPE
+        DESCRIPTION.
 
+    Returns
+    -------
+    class_list_dict : TYPE
+        DESCRIPTION.
+    description_list_dict : TYPE
+        DESCRIPTION.
+
+    """
     # Ontologies to load
     # onto_names = ["chmo","Allotrope_OWL", "chebi", "NCIT", "SBO"]
     class_list_dict = {}
@@ -354,12 +495,33 @@ def onto_loader(onto_names):
     print("=============================================")
     return class_list_dict, description_list_dict
 
-##
-# Find same entries of class names in both concept_table and ontologies
-# load Excel-File with name file_name and store list with all concepts, 
-# and their definitions (if any) as new_file_name Excel-file.
-##
 def onto_class_comparison(desc_list_dict, file_name, new_file_name):
+    """
+    Find same entries of class names in both concept_table and ontologies
+    load Excel-File with name file_name and store list with all concepts, 
+    and their definitions (if any) as new_file_name Excel-file.
+
+    example: onto_class_comparison(desc_dict, 'test_Concepts', 'test_Concepts_compared')
+    execute to compare labels in test_Concepts.xlsx with loaded ontologies, store resulting 
+    Dataframe in test_Concepts_compared.xlsx
+    
+    Parameters
+    ----------
+    desc_list_dict : dict
+        Lists classlabel and definition string of ontology class.
+        Obtainable from description_dicts()
+    file_name : str
+        Excel file name to be read.
+    new_file_name : str
+        Excel file name to be written.
+
+    Returns
+    -------
+    df_concepts : DataFrame
+        DataFrame listing labels and all definitions for the labels according to the respective ontology.
+
+    """   
+    
     # names of ontologies within desc_list_dict
     onto_names = list(desc_list_dict.keys())
     concept_table = pd.read_excel(file_name + '.xlsx')
@@ -388,30 +550,17 @@ def onto_class_comparison(desc_list_dict, file_name, new_file_name):
     print('Stored common concepts and definitions in {}'.format(new_file_name + '.xlsx'))
     return df_concepts
 
-##
-# searches for a random class in each ontology of desc_dict and 
-# outputs its definition. Imports package random.
-##
 def definition_sampler(desc_dict):
+    """
+    searches for a random class in each ontology of desc_dict and 
+    outputs its definition. Imports package random.
+    """
     onto_list = list(desc_dict.keys())
     for i in onto_list:
         tempDefList = list(desc_dict[i].keys())
         randClass = tempDefList[random.randrange(len(tempDefList))]
         randDef = desc_dict[i][randClass]
         print('{}:\n Random Class: {} \n Definition: {}\n'.format(i, randClass, randDef))
-#####################################
-#              Example              #
-#####################################
-'''
-# execute once to load all ontologies from list 
-[class_dict, desc_dict] = onto_loader(["chmo","Allotrope_OWL", "chebi"])
-
-# execute to compare CFI_test.xlsx with loaded ontologies, store resulting 
-# Dataframe in CFI_comConcepts.xlsx
-
-onto_class_comparison(desc_dict, 'CFI_test', 'CFI_comConcepts')
-# onto_class_comparison(desc_dict, 'CFI_Concepts', 'CFI_Concepts_compared')
-'''
 
 ######
 # Concept extraction
@@ -422,7 +571,15 @@ onto_class_comparison(desc_dict, 'CFI_test', 'CFI_comConcepts')
 # Loads semantic artifacts, loads text-pickle and trains w2v model with desired
 # min_counts outputs list of token and definitions based on min_count list as excel-file
 ##
-def ConceptExtractor_methanation_diffMCs(ontology_filenames = ["Allotrope_OWL"], use_IUPAC_goldbook = True, min_count_list = [1]):
+def ConceptExtractor_methanation_diffMCs(ontology_filenames = ["Allotrope_OWL"], 
+                                         use_IUPAC_goldbook = True, 
+                                         min_count_list = [1],
+                                         preprocessed_text_pickle_name = "methanation_only_text"):
+    """
+    Loads semantic artifacts, loads text-pickle and trains w2v model with desired
+    min_counts outputs list of token and definitions based on min_count list as excel-file
+    """
+    
     
     #[class_dict, desc_dict] = onto_loader(["bao_complete_merged", "Allotrope_OWL", "chebi", "chmo", "NCIT", "SBO"])
     [class_dict, desc_dict] = onto_loader(ontology_filenames)
@@ -442,13 +599,12 @@ def ConceptExtractor_methanation_diffMCs(ontology_filenames = ["Allotrope_OWL"],
                         temp_dict[dict_data["entries"][entry]["term"].lower()] = "[AB] Class with same label also contained in [IUPAC-Goldbook]"
                 else:
                     print("empty entry: {}".format(dict_data["entries"][entry]))
-        desc_dict["IUPAC-Goldbook"] = temp_dict
-        
+        desc_dict["IUPAC-Goldbook"] = temp_dict    
     
+    # used for later output of statistics regarding extension of ontologies
     statistics_dict_res = {}
     
-    
-    with open('./pickle/methanation_only_text.pickle', 'rb') as pickle_file:
+    with open('./pickle/'+preprocessed_text_pickle_name+'.pickle', 'rb') as pickle_file:
         content = pickle.load(pickle_file)
         
     
