@@ -9,6 +9,7 @@ M. Völkenrath, N. Kockmann
 
 """
 
+# imports for preprocessing functions:
 import glob2
 import pickle
 import spacy
@@ -20,6 +21,15 @@ from pdfminer.pdfpage import PDFPage
 from io import StringIO
 from gensim.models import Word2Vec
 
+# imports for ontology related functions:
+import pandas as pd
+import random
+import re 
+
+from owlready2 import *
+from tqdm import tqdm
+import numpy as np
+import pickle
 
 ## 
 # textmining - used for retrieval of text data from pdfs stored in ./import/
@@ -222,3 +232,305 @@ def preprocessing(pdf_data):
     return sentences_lem
 
 
+##### 
+# Begin of ontology related functions
+#####
+
+##
+# loads an ontology from subfolder ontologies defined by its name 
+# outputs list of classes contained in this ontology  
+##
+def load_ontologies(onto_name):
+    new_world = owlready2.World()
+    onto = new_world.get_ontology("./ontologies/{}.owl".format(onto_name)).load()
+    onto_class_list = list(new_world.classes())
+    print("Loading {} done. Imported {} classes.".format(onto_name, len(onto_class_list)))
+    return onto_class_list 
+
+
+## 
+# definition error used in function description_dicts to return string,
+# when class definition strings could not be extracted properly
+## 
+class definitionError(Exception):
+    pass
+    
+##
+# extracts class names and descriptions based on class list (as owlready2 object)
+# returns dictionary with general structure of 
+# desc_dict = {ontology_class_label : Definition string}
+# WARNING: Descriptions often have different identifiers (see try:... except loop)
+#          Implemented IAO_0000115 and .comment for now. 
+##
+def description_dicts(class_list, onto_name):
+    print("Extracting class descriptions...")
+    desc_dict = {}
+    N_cl = len(class_list)
+    temp_class_label = []
+    
+    def_dict = {'Allotrope_OWL':'definition',
+                'NCIT':'P97',
+                'chmo':'IAO_0000115',
+                'chebi':'IAO_0000115',
+                'bao_complete_merged':'IAO_0000115',
+                'bao_complete':'IAO_0000115',
+                'SBO':'comment'}
+    try:
+        def_id = def_dict[onto_name]
+    except:
+        def_id = []
+    
+    for i in range(N_cl):
+        temp_class = class_list[i]
+        #check, if label and definition are not empty:
+        #Definition: IAO_0000115, comment
+        try:
+            if temp_class.prefLabel:
+                # if preferred label is not empty, use it as class label
+                temp_class_label = temp_class.prefLabel[0].lower()
+        except:
+            try:
+                if temp_class.label:
+                    # if label is not empty, use it as class label
+                    temp_class_label = temp_class.label[0].lower()
+            except:
+                temp_class_label = []
+                print("Label for class {} not determined!".format(str(temp_class)))
+                return()
+        
+        if temp_class_label:
+            # if class got a label which is not empty, search for definition                    
+            if def_id:
+                try:
+                    desc_dict[temp_class_label] = getattr(temp_class,def_id)
+                except:
+                    desc_dict[temp_class_label] = temp_class_label
+                if not desc_dict[temp_class_label]: # Desc_dict empty
+                    desc_dict[temp_class_label] = temp_class_label
+            else:
+                try: #NCIT
+                    desc_dict[temp_class_label] = temp_class.P97
+                except:
+                    try: #temp_class.IAO_0000115
+                        desc_dict[temp_class_label] = temp_class.IAO_0000115    
+                    except:
+                        try:
+                            desc_dict[temp_class_label] = temp_class.definition
+                            if not desc_dict[temp_class_label]: 
+                                # .definition is empty    
+                                try: #temp_class.comment
+                                    desc_dict[temp_class_label] = temp_class.comment
+                                except:
+                                    raise print("in description_dicts - class definitions were not recognized properly.")
+                                    return()
+                        except:
+                            raise definitionError("in description_dicts - class definitions were not recognized properly.")
+                            return()
+    print("Done.")
+    return desc_dict
+
+
+##    
+# Loading ontologies
+# and storing classes and their descriptions in dictionaries
+##
+def onto_loader(onto_names):        
+
+    # Ontologies to load
+    # onto_names = ["chmo","Allotrope_OWL", "chebi", "NCIT", "SBO"]
+    class_list_dict = {}
+    description_list_dict ={}
+        
+    for name in onto_names:
+        print("Loading ontology {} ...".format(name))
+        class_list_dict[name] = load_ontologies(name)
+        description_list_dict[name] = description_dicts(class_list_dict[name],name)
+    
+    # existing_keys = names of ontologies
+    existing_keys = list(description_list_dict.keys())
+        
+    print("Ontologies {} loaded. \n PLEASE CHECK if class descriptions are not empty.".format(str(onto_names)))
+    print("=============================================")
+    return class_list_dict, description_list_dict
+
+##
+# Find same entries of class names in both concept_table and ontologies
+# load Excel-File with name file_name and store list with all concepts, 
+# and their definitions (if any) as new_file_name Excel-file.
+##
+def onto_class_comparison(desc_list_dict, file_name, new_file_name):
+    # names of ontologies within desc_list_dict
+    onto_names = list(desc_list_dict.keys())
+    concept_table = pd.read_excel(file_name + '.xlsx')
+    
+    set_1 = [iter_string.lower() for iter_string in list(concept_table[0])]
+
+    df_concepts = pd.DataFrame({file_name : set_1})
+    
+    for i in range(len(onto_names)):
+        df_concepts.insert(len(df_concepts.columns),onto_names[i],'') # empty column with name of ontology
+        set_2 = desc_list_dict[onto_names[i]] # set (Ontology) to compare concepts to
+        candidates = list(set(set_1).intersection(set_2)) # intersection of concept_table-list and ontology
+        print("Found {}/{} common concept names for Ontology {} and rawdata".format(len(candidates),len(set_1),onto_names[i]))      
+        # paste description of class into respective row, when no description exist, 
+        # use the class name to mark concepts, which also exist in the ontology
+        for j in candidates:
+            if desc_list_dict[onto_names[i]][j]: # not empty
+                try:    
+                    df_concepts.loc[getattr(df_concepts, file_name) == j, onto_names[i]] =  desc_list_dict[onto_names[i]][j] # changes entry in ontology column to definition, when in concepts
+                except:
+                    df_concepts.loc[getattr(df_concepts, file_name) == j, onto_names[i]] = str(desc_list_dict[onto_names[i]][j])
+            else:
+                df_concepts.loc[getattr(df_concepts, file_name) == j, onto_names[i]] =  j # changes entry in ontology column to definition, when in concepts    
+    #save dataframe as excel sheet
+    df_concepts.to_excel(new_file_name + '.xlsx') 
+    print('Stored common concepts and definitions in {}'.format(new_file_name + '.xlsx'))
+    return df_concepts
+
+##
+# searches for a random class in each ontology of desc_dict and 
+# outputs its definition. Imports package random.
+##
+def definition_sampler(desc_dict):
+    onto_list = list(desc_dict.keys())
+    for i in onto_list:
+        tempDefList = list(desc_dict[i].keys())
+        randClass = tempDefList[random.randrange(len(tempDefList))]
+        randDef = desc_dict[i][randClass]
+        print('{}:\n Random Class: {} \n Definition: {}\n'.format(i, randClass, randDef))
+#####################################
+#              Example              #
+#####################################
+'''
+# execute once to load all ontologies from list 
+[class_dict, desc_dict] = onto_loader(["chmo","Allotrope_OWL", "chebi"])
+
+# execute to compare CFI_test.xlsx with loaded ontologies, store resulting 
+# Dataframe in CFI_comConcepts.xlsx
+
+onto_class_comparison(desc_dict, 'CFI_test', 'CFI_comConcepts')
+# onto_class_comparison(desc_dict, 'CFI_Concepts', 'CFI_Concepts_compared')
+'''
+
+######
+# Concept extraction
+######
+
+##
+# ConceptExtractor_methanation_diffMCs
+# Loads semantic artifacts, loads text-pickle and trains w2v model with desired
+# min_counts outputs list of token and definitions based on min_count list as excel-file
+##
+def ConceptExtractor_methanation_diffMCs():
+    [class_dict, desc_dict] = onto_loader(["bao_complete_merged", "Allotrope_OWL", "chebi", "chmo", "NCIT", "SBO"])
+    
+    ## LOADING IUPAC GOLDBOOK 
+    temp_dict = {}
+    with open('./ontologies/goldbook_vocab.json', encoding = "utf8") as json_file:
+        dict_data = json.load(json_file)
+        for entry in dict_data["entries"].keys(): 
+            if dict_data["entries"][entry]["term"] != None:
+                if dict_data["entries"][entry]["definition"] != None:
+                    temp_dict[dict_data["entries"][entry]["term"].lower()] = dict_data["entries"][entry]["definition"]
+                else:
+                    print("IUPAC Goldbook - empty definition in term: {}".format(dict_data["entries"][entry]["term"]))
+                    temp_dict[dict_data["entries"][entry]["term"].lower()] = "[AB] Class with same label also contained in [IUPAC-Goldbook]"
+            else:
+                print("empty entry: {}".format(dict_data["entries"][entry]))
+    desc_dict["IUPAC-Goldbook"] = temp_dict
+    
+    
+    statistics_dict_res = {}
+    
+    
+    with open('./pickle/methanation_only_text.pickle', 'rb') as pickle_file:
+        content = pickle.load(pickle_file)
+        
+    min_count_list = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,50,100]
+    #min_count_list = [1,5,10,25,50,100]
+    
+    
+    for min_count in min_count_list:
+        print('Training Word2Vec with mincount = {}...'.format(min_count))
+        model = create_model(content, min_count)
+        name_model = 'methanation_only_text' + '_mc' + str(min_count)
+        model.save('./models/' + name_model)
+        print('Done!')
+    
+        word_list = model.wv.index_to_key
+    
+        #file_name = "methanation_mc10_searched"
+        output_file_name = "conceptsMC{}_definitions".format(min_count)
+        #df_concepts = pd.read_excel(file_name + '.xlsx')
+        #df_concepts.drop(df_concepts.columns.difference([file_name + '.xlsx','methanation_mc10_prep']),1,inplace =True)
+        
+        df_concepts = pd.DataFrame({"MC {}".format(min_count) :  word_list})
+        
+        #word_list = list(df_concepts['methanation_mc10_prep'])
+        
+        statistics_dict = {}
+        resDict = {}
+        for loaded_onto in desc_dict:
+            summary = []
+            description_set =  list(desc_dict[loaded_onto].keys())
+            for i in description_set: # comparison of labels
+                try:
+                    # Make sure, that no special characters are contained in class-name
+                    r = re.compile(str("[a-zA-Z0-9]*^" + i + "$"),re.IGNORECASE)
+                    newlist = list(filter(r.match, word_list))
+                    if newlist: # entry found
+                        summary.append(newlist)
+                except:
+                    print("Passed due to class-name: '{}', Ontology: {}".format(i,loaded_onto))
+            resDict[loaded_onto] = summary
+        
+        ## output number of labels found for each ontology
+        print("=============================================")
+        print("Min_Count = {}".format(min_count))
+        for key in resDict:
+            print("{}: Found {} labels".format(key, len(resDict[key])))
+            statistics_dict[key] = len(resDict[key])
+        print("=============================================")
+        
+        
+        set_1 = [iter_string.lower() for iter_string in list(word_list)]
+        ## store prefLabels and definitions
+        for i in resDict:
+            df_concepts.insert(len(df_concepts.columns),i,'') # empty column with name of ontology
+            set_2 = desc_dict[i] # set (Ontology) to compare concepts to
+            candidates = list(set(set_1).intersection(set_2)) # intersection of concept_table-list and ontology
+            # print("Found {}/{} common concept names for Ontology {} and rawdata".format(len(candidates),len(set_1),onto_names[i]))
+          
+            # paste description of class into respective row, when no description exist, 
+            # use the class name to mark concepts, which also exist in the ontology
+            for j in candidates:
+                if desc_dict[i][j]: # not empty
+                    try:    
+                        df_concepts.loc[getattr(df_concepts, "MC {}".format(min_count)) == j, i] =  desc_dict[i][j] # changes entry in ontology column to definition, when in concepts
+                    except:
+                        df_concepts.loc[getattr(df_concepts, "MC {}".format(min_count)) == j, i] = str(desc_dict[i][j])
+                else:
+                    df_concepts.loc[getattr(df_concepts, "MC {}".format(min_count)) == j, i] =  j # changes entry in ontology column to definition, when in concepts
+        
+        #save dataframe as excel sheet
+        df_concepts.to_excel('./xlsx-files/' + output_file_name + '.xlsx') 
+        print('Stored common concepts and definitions in ./xlsx-files/{}'.format(output_file_name + '.xlsx'))
+        
+        # replaces empty strings with NaN entries
+        df_conceps_nan = df_concepts.replace(r'^\s*$', np.nan, regex=True)
+        
+        # count each row seperately if entry != NaN and sum up 
+        sum_of_found_defs = df_conceps_nan.iloc[:,1:].count(1).astype(bool).sum(axis = 0)
+        statistics_dict["sum_of_found_defs"] = int(sum_of_found_defs)
+        
+        statistics_dict['keys_total'] = len(word_list)
+        
+        statistics_dict_res[min_count] = statistics_dict
+        
+    """
+    with open('concept_statistics_diffMCs.json', 'w') as f:
+        json.dump(statistics_dict_res, f)
+    """
+    pd.DataFrame(statistics_dict_res).to_excel("./xlsx-files/concept_statistics_diffMCs.xlsx")
+    print('Stored statistics for each loop in ./xlsx-files/concept_statistics_diffMCs.xlsx')
+        
