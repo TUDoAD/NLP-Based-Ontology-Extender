@@ -9,9 +9,12 @@ M. Völkenrath, N. Kockmann
 
 """
 
+# general imports used
+from gensim.models import Word2Vec
+import pickle
+
 # imports for preprocessing functions:
 import glob2
-import pickle
 import spacy
 
 from pdfminer.pdfinterp import PDFResourceManager, PDFPageInterpreter
@@ -19,18 +22,18 @@ from pdfminer.layout import LAParams
 from pdfminer.converter import TextConverter
 from pdfminer.pdfpage import PDFPage
 from io import StringIO
-from gensim.models import Word2Vec
 
 # imports for ontology related functions:
 import pandas as pd
+import numpy as np
+
 import random
 import re 
 import json
+import types
 
 from owlready2 import *
 from tqdm import tqdm
-import numpy as np
-import pickle
 
 ####
 
@@ -335,14 +338,14 @@ def preprocessing(pdf_data):
 # Begin of ontology related functions
 #####
 
-def load_ontologies(onto_name):
+def load_ontologies(ontology_name):
     """
     loads an ontology from subfolder ontologies defined by its name 
     outputs list of classes contained in this ontology  
 
     Parameters
     ----------
-    onto_name : TYPE
+    ontology_name : TYPE
         DESCRIPTION.
 
     Returns
@@ -352,9 +355,9 @@ def load_ontologies(onto_name):
 
     """
     new_world = owlready2.World()
-    onto = new_world.get_ontology("./ontologies/{}.owl".format(onto_name)).load()
+    onto = new_world.get_ontology("./ontologies/{}.owl".format(ontology_name)).load()
     onto_class_list = list(new_world.classes())
-    print("Loading {} done. Imported {} classes.".format(onto_name, len(onto_class_list)))
+    print("Loading {} done. Imported {} classes.".format(ontology_name, len(onto_class_list)))
     return onto_class_list 
 
 class definitionError(Exception):
@@ -365,7 +368,7 @@ class definitionError(Exception):
     pass
     
 
-def description_dicts(class_list, onto_name):
+def description_dicts(class_list, ontology_name):
     """
     extracts class names and descriptions based on class list (as owlready2 object)
     returns dictionary with general structure of 
@@ -380,7 +383,7 @@ def description_dicts(class_list, onto_name):
     ----------
     class_list : TYPE
         DESCRIPTION.
-    onto_name : TYPE
+    ontology_name : TYPE
         DESCRIPTION.
 
     Raises
@@ -409,7 +412,7 @@ def description_dicts(class_list, onto_name):
                 'bao_complete':'IAO_0000115',
                 'SBO':'comment'}
     try:
-        def_id = def_dict[onto_name]
+        def_id = def_dict[ontology_name]
     except:
         def_id = []
     
@@ -462,12 +465,12 @@ def description_dicts(class_list, onto_name):
     print("Done.")
     return desc_dict
 
-def onto_loader(onto_names):        
+def onto_loader(ontology_names):        
     """
     Loading ontologies and storing classes and their descriptions in dictionaries.
     Parameters
     ----------
-    onto_names : TYPE
+    ontology_names : TYPE
         DESCRIPTION.
 
     Returns
@@ -479,11 +482,11 @@ def onto_loader(onto_names):
 
     """
     # Ontologies to load
-    # onto_names = ["chmo","Allotrope_OWL", "chebi", "NCIT", "SBO"]
+    # ontology_names = ["chmo","Allotrope_OWL", "chebi", "NCIT", "SBO"]
     class_list_dict = {}
     description_list_dict ={}
         
-    for name in onto_names:
+    for name in ontology_names:
         print("Loading ontology {} ...".format(name))
         class_list_dict[name] = load_ontologies(name)
         description_list_dict[name] = description_dicts(class_list_dict[name],name)
@@ -491,7 +494,7 @@ def onto_loader(onto_names):
     # existing_keys = names of ontologies
     existing_keys = list(description_list_dict.keys())
         
-    print("Ontologies {} loaded. \n PLEASE CHECK if class descriptions are not empty.".format(str(onto_names)))
+    print("Ontologies {} loaded. \n PLEASE CHECK if class descriptions are not empty.".format(str(ontology_names)))
     print("=============================================")
     return class_list_dict, description_list_dict
 
@@ -523,28 +526,28 @@ def onto_class_comparison(desc_list_dict, file_name, new_file_name):
     """   
     
     # names of ontologies within desc_list_dict
-    onto_names = list(desc_list_dict.keys())
+    ontology_names = list(desc_list_dict.keys())
     concept_table = pd.read_excel(file_name + '.xlsx')
     
     set_1 = [iter_string.lower() for iter_string in list(concept_table[0])]
 
     df_concepts = pd.DataFrame({file_name : set_1})
     
-    for i in range(len(onto_names)):
-        df_concepts.insert(len(df_concepts.columns),onto_names[i],'') # empty column with name of ontology
-        set_2 = desc_list_dict[onto_names[i]] # set (Ontology) to compare concepts to
+    for i in range(len(ontology_names)):
+        df_concepts.insert(len(df_concepts.columns),ontology_names[i],'') # empty column with name of ontology
+        set_2 = desc_list_dict[ontology_names[i]] # set (Ontology) to compare concepts to
         candidates = list(set(set_1).intersection(set_2)) # intersection of concept_table-list and ontology
-        print("Found {}/{} common concept names for Ontology {} and rawdata".format(len(candidates),len(set_1),onto_names[i]))      
+        print("Found {}/{} common concept names for Ontology {} and rawdata".format(len(candidates),len(set_1),ontology_names[i]))      
         # paste description of class into respective row, when no description exist, 
         # use the class name to mark concepts, which also exist in the ontology
         for j in candidates:
-            if desc_list_dict[onto_names[i]][j]: # not empty
+            if desc_list_dict[ontology_names[i]][j]: # not empty
                 try:    
-                    df_concepts.loc[getattr(df_concepts, file_name) == j, onto_names[i]] =  desc_list_dict[onto_names[i]][j] # changes entry in ontology column to definition, when in concepts
+                    df_concepts.loc[getattr(df_concepts, file_name) == j, ontology_names[i]] =  desc_list_dict[ontology_names[i]][j] # changes entry in ontology column to definition, when in concepts
                 except:
-                    df_concepts.loc[getattr(df_concepts, file_name) == j, onto_names[i]] = str(desc_list_dict[onto_names[i]][j])
+                    df_concepts.loc[getattr(df_concepts, file_name) == j, ontology_names[i]] = str(desc_list_dict[ontology_names[i]][j])
             else:
-                df_concepts.loc[getattr(df_concepts, file_name) == j, onto_names[i]] =  j # changes entry in ontology column to definition, when in concepts    
+                df_concepts.loc[getattr(df_concepts, file_name) == j, ontology_names[i]] =  j # changes entry in ontology column to definition, when in concepts    
     #save dataframe as excel sheet
     df_concepts.to_excel(new_file_name + '.xlsx') 
     print('Stored common concepts and definitions in {}'.format(new_file_name + '.xlsx'))
@@ -566,11 +569,15 @@ def definition_sampler(desc_dict):
 # Concept extraction
 ######
 
-def IUPAC_goldbook_loader():
+def IUPAC_goldbook_loader(mute = True
+                          ):
     """
     Loads the json-file from the IUPAC Goldbook located at ./ontologies/goldbook_vocab.json
     and returns it as dictionary
-    
+    Parameters
+    ----------
+    mute:  if true, no console output is printed, when definition string in Goldbook was empty
+        
     Returns
     -------
     temp_dict: containing the entries of the goldbook vocabulary for further processing.
@@ -584,7 +591,8 @@ def IUPAC_goldbook_loader():
                 if dict_data["entries"][entry]["definition"] != None:
                     temp_dict[dict_data["entries"][entry]["term"].lower()] = dict_data["entries"][entry]["definition"]
                 else:
-                    print("IUPAC Goldbook - empty definition in term: {}".format(dict_data["entries"][entry]["term"]))
+                    if not mute:
+                        print("IUPAC Goldbook - empty definition in term: {}".format(dict_data["entries"][entry]["term"]))
                     temp_dict[dict_data["entries"][entry]["term"].lower()] = "[AB] Class with same label also contained in [IUPAC-Goldbook]"
             else:
                 print("empty entry: {}".format(dict_data["entries"][entry]))
@@ -593,7 +601,8 @@ def IUPAC_goldbook_loader():
 def ConceptExtractor_methanation_diffMCs(ontology_filenames = ["Allotrope_OWL"], 
                                          use_IUPAC_goldbook = True, 
                                          min_count_list = [1],
-                                         preprocessed_text_pickle_name = "methanation_only_text"):
+                                         preprocessed_text_pickle_name = "methanation_only_text",
+                                         gb_muted = True):
     """
     Loads semantic artifacts, loads text-pickle and trains w2v model with desired
     min_count(s). Outputs list of token and definitions based on min_count list and "statistics"/metrics as excel-files in subdir ./xlsx-files/
@@ -611,6 +620,8 @@ def ConceptExtractor_methanation_diffMCs(ontology_filenames = ["Allotrope_OWL"],
         Using e.g. [1,5] conducts the experiments first with min_count = 1 and then with min_count = 5
     preprocessed_text_pickle_name : String, optional
         Used to load the pickle containing the preprocessed (tokenized) text, as input for word2vec, the model pickle should be put in the subdir ./pickle/ . The default is "methanation_only_text".
+    gb_muted: Bool, optional
+        when set true, console output from IUPAC_goldbook_loader() is supressed
 
     Returns
     -------
@@ -625,7 +636,7 @@ def ConceptExtractor_methanation_diffMCs(ontology_filenames = ["Allotrope_OWL"],
     
     # LOADING IUPAC GOLDBOOK 
     if use_IUPAC_goldbook:
-        desc_dict["IUPAC-Goldbook"] = IUPAC_goldbook_loader()
+        desc_dict["IUPAC-Goldbook"] = IUPAC_goldbook_loader(gb_muted)
     
     # used for later output of statistics regarding extension of ontologies
     statistics_dict_res = {}
@@ -700,7 +711,9 @@ def ConceptExtractor_methanation_diffMCs(ontology_filenames = ["Allotrope_OWL"],
         
         #save dataframe as excel sheet
         df_concepts.to_excel('./xlsx-files/' + output_file_name + '.xlsx') 
+        print("=============================================")
         print('Stored common concepts and definitions in ./xlsx-files/{}'.format(output_file_name + '.xlsx'))
+        print("=============================================")
         
         # update concept_dict with entries for current min_count
         concept_dict.update({"min_count {}".format(min_count):df_concepts.to_dict()})
@@ -726,8 +739,212 @@ def ConceptExtractor_methanation_diffMCs(ontology_filenames = ["Allotrope_OWL"],
     """
     # store metrics in excel-file
     pd.DataFrame(statistics_dict_res).to_excel("./xlsx-files/{}_concept_statistics_diffMCs.xlsx".format(preprocessed_text_pickle_name))
+    print("=============================================")
     print("Stored metrics for all min_count paramters in ./xlsx-files/{}_concept_statistics_diffMCs.xlsx".format(preprocessed_text_pickle_name))
+    print("=============================================")
     
     return concept_dict,statistics_dict_res
 
+"""
+AB HIER WEITER
+"""
 
+def Ontology_class_extender(ontology_filenames = ["Allotrope_OWL"], 
+                            use_IUPAC_goldbook = True,
+                            min_count_list = [1],
+                            preprocessed_text_pickle_name = "methanation_only_text",
+                            similarity_threshold_list = [0.999],
+                            ontology_name = 'Allotrope_OWL',
+                            gb_muted = True): 
+    
+    # parameters:
+    #model_name_list = ['methanation_only_text_mc1','methanation_only_text_mc5',
+    #                   'methanation_only_text_mc10','methanation_only_text_mc25']    
+    min_count_list = range(1,26)
+    model_name_list = ['methanation_only_text_mc'+str(i) for i in min_count_list]
+    
+    #similarity_threshold_list = [0.8,0.9,0.95,0.99,0.995,0.996,0.997,0.998,0.999]
+    #similarity_threshold_list = [0.999]#,0.9995,1]
+    
+    #model_name = 'methanation_only_text_mc1'
+    #model_name = 'methanation_only_text_mc10'
+    #model_name = 'methanation_only_text_mc5'
+    #model_name = 'methanation_only_text_mc25'
+    #ontology_name = 'Allotrope_OWL'
+    # similarity_threshold = 0.99
+    
+    
+    ## Allocation of lists used for statistics
+    modelname_list = []
+    sim_list = []
+    new_classes_list = []
+    unique_list = []
+    model_token_number = []
+    unique_len_all_concepts_found = []
+    ##
+    
+    ## Load Definitions
+    [class_dict, desc_dict] = onto_loader(["chmo", "chebi", "NCIT", "bao_complete_merged", "SBO"])
+    
+    
+    ## LOADING IUPAC GOLDBOOK 
+    if use_IUPAC_goldbook:
+        desc_dict["IUPAC-Goldbook"] = IUPAC_goldbook_loader(gb_muted)
+    
+    ##
+    for model_name in model_name_list:
+        for similarity_threshold in similarity_threshold_list:
+           
+            # loading ontology from local file 
+            #[class_dict, desc_dict] = onto_loader([ontology_name])
+            Onto_World = owlready2.World()
+            onto_local = Onto_World.get_ontology('./ontologies/' + ontology_name + '.owl').load()
+            
+            # load word2vec model
+            model_test = Word2Vec.load('./models/' + model_name)
+            conceptList = model_test.wv.index_to_key
+            
+            # get all the preferred labels of the ontology:
+            count = 0
+            
+            class_list = []
+            for i in list(onto_local.classes()):
+                try: 
+                    class_list.append(i.prefLabel[0])
+                except:
+                    #print('class not included:{}'.format(i))
+                    count += 1
+                    pass
+            #print('Not able to include {} classes due to missing label'.format(count))
+            ##
+            #   conceptList = Liste mit Konzepten aus MC = 10, die auch in AFO drin sind?
+            ##
+            
+            # allocate resultDictionary (only gets important, when more than 1 ontology is loaded)
+            resDict = {}
+            
+            # for unique classes:
+            w2v_all_concepts_found = []
+            
+            # for loaded_onto in desc_dict:
+            summary = []
+            #description_set =  list(desc_dict[loaded_onto].keys())
+            
+            for i in class_list: # comparison of labels
+                try:
+                    r = re.compile(str("[a-zA-Z0-9]*^" + i + "$"),re.IGNORECASE)
+                    newlist = list(filter(r.match, conceptList))
+                    if newlist: # entry found
+                        summary.append(newlist)
+                except:
+                    print("Passed '{}', Ontology: {}".format(i,ontology_name))
+            resDict[ontology_name] = summary
+            
+            with open('./json-files/FoundClasses' + model_name + str(similarity_threshold) + '.json', 'w') as jsonfile:
+                json.dump(resDict, jsonfile)
+                
+            # List of classes in Vectorspace and 
+            # current selected ontology (onto_local) = resDict[ontology_name]
+            
+            with onto_local:
+                class w2vConcept(Thing):
+                    prefLabel = 'w2vConcept'
+                    definition = 'A concept generated automatically by [AB] to gather all concepts added by word2vec'
+                class conceptually_related_to(ObjectProperty):
+                    prefLabel = 'conceptually related to'
+                    definition = 'Created automatically by [AB] to specify relations of concepts to newly introduced concepts by word-vector similarity.'
+                    python_name = "conceptRelTo"
+                    
+            for concept in resDict[ontology_name]:
+                # iterates through classes of resDict and temp_class = class of the 
+                # ontology_name ontology with same label of concept
+            
+                ## LABEL OR PREFLABEL
+                ## label or prefLabel
+                temp_class = onto_local.search_one(prefLabel = concept[0]) 
+                tuple_similarities = model_test.wv.most_similar(positive = concept[0], topn = 5)
+                # new_classes = [tuple_similarities[i][0] for i in range(len(tuple_similarities))]
+                new_classes = []
+                
+                for i in range(len(tuple_similarities)):
+                    if tuple_similarities[i][1] > similarity_threshold:
+                        new_classes.append(tuple_similarities[i][0])
+                
+                w2v_all_concepts_found.extend(new_classes)
+                
+                with onto_local:
+                    for i in new_classes: # create new class 
+                        ## check, if class already exists?
+                        #existing_class = onto_local.search_one(prefLabel = i)
+                        if onto_local.search_one(prefLabel = i):
+                            ## LABEL OR PREFLABEL
+                            new_class = onto_local.search_one(prefLabel = i)
+                            #new_class.conceptually_related_to = [temp_class]
+                            new_class.is_a.append(conceptually_related_to.some(temp_class))
+                        else:
+                            # label i not yet included in Ontology:    
+                            # assign new class i as subclass of temp_class:    
+                            # new_class = types.new_class(i, (temp_class,))
+                            new_class = types.new_class(i,(w2vConcept,) )
+                            new_class.comment.append('Created automatically by [AB] based on word2vec output of concept name "{}"'.format(concept[0]))
+                            #new_class.conceptually_related_to = [temp_class]
+                            new_class.is_a.append(conceptually_related_to.some(temp_class))                       
+                            
+                            
+            different_class_count = len(list(onto_local.w2vConcept.subclasses()))
+            
+            for w2vConceptClass in list(onto_local.w2vConcept.subclasses()):
+                for ontology_names in desc_dict:
+                    classlabel = w2vConceptClass.name
+                    try:
+                        defstring = ''.join(desc_dict[ontology_names][classlabel]) if desc_dict[ontology_names][classlabel] != classlabel else "" 
+                    except:
+                        defstring = 1
+                        pass
+                    
+                    if defstring == 1:
+                        pass
+                    else:
+                        if defstring:
+                            comment_string = defstring + "\nFound by [AB] in [" + ontology_names + "]"
+                            print("def of {} found in ontology {}".format(classlabel, ontology_names))
+                        else:
+                            comment_string = "[AB] Class with same label also contained in [{}] unable to obtain definition".format(ontology_names)
+                    
+                    w2vConceptClass.comment.append(comment_string)
+
+            onto_savestring = './ontologies_output/' + ontology_name + '_ext_' + model_name + '_' + str(similarity_threshold) + '.owl'
+            onto_local.save(file = onto_savestring)  
+            
+            print("=============================================")
+            print("model_name = {} \n similarity_threshold = {}".format(model_name,similarity_threshold))
+            print('Added {} new classes based on word2vec model {}. \nFile saved as {}.'.format(different_class_count,model_name, onto_savestring))
+            
+            with open('./json-files/FoundClasses' + model_name + str(similarity_threshold) + '.json', 'r') as f:
+                data = json.load(f)
+            
+            unique_dict = {}
+            for keys in data.keys():
+                for i in data[keys]:
+                    temp = dict.fromkeys(i,"")
+                    unique_dict.update(temp)    
+            
+            print("Unique keys added to ontology:", len(dict.fromkeys(w2v_all_concepts_found)))# len(unique_dict.keys()))
+            print("=============================================")  
+            modelname_list.append(model_name) # gives the name of the word2vec Model used to obtain class candidates
+            sim_list.append(similarity_threshold) # lists the applied cosine-similarity threshold
+            new_classes_list.append(different_class_count) # Amount of new classes added to the ontology as subclass of w2vConcept
+            unique_list.append(len(dict.fromkeys(w2v_all_concepts_found))) # amount of unique concepts generated by word2vec (as 2 words might have the same concept in their w2v output, unique concept counts each word only once)
+            unique_len_all_concepts_found.append(len(w2v_all_concepts_found)) # amount of classes suggested by w2v. 
+            model_token_number.append(len(conceptList)) # overall amount of token contained in the word2vec model
+            
+            Onto_World = None
+            onto_local = None
+            
+    output_dict = {'min_count': modelname_list,'similarity_threshold':sim_list,'new_classes':new_classes_list,'unique_keys':unique_list, 'model_token_number':model_token_number, 'unique_len_all_concepts_found':unique_len_all_concepts_found}
+    
+    df = pd.DataFrame(output_dict)
+    df.to_excel('Auswertung_versch_MC_und_Thresholds.xlsx')
+    
+
+    
