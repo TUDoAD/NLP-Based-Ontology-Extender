@@ -620,6 +620,10 @@ def ConceptExtractor_methanation_diffMCs(ontology_filenames = ["Allotrope_OWL"],
     # used for later output of statistics regarding extension of ontologies
     statistics_dict_res = {}
     
+    # used later to return all dataframes found for different min_counts, 
+    # containing the pairs of class labels and different definitions found
+    concept_dict = {}
+    
     # load preprocessed data from pickle
     with open('./pickle/'+preprocessed_text_pickle_name+'.pickle', 'rb') as pickle_file:
         content = pickle.load(pickle_file)
@@ -688,6 +692,8 @@ def ConceptExtractor_methanation_diffMCs(ontology_filenames = ["Allotrope_OWL"],
         df_concepts.to_excel('./xlsx-files/' + output_file_name + '.xlsx') 
         print('Stored common concepts and definitions in ./xlsx-files/{}'.format(output_file_name + '.xlsx'))
         
+        .append(df_concepts)
+        
         # from here: "statistics" to store some metrics on the run such as summing up the
         # number of classes with at least 1 definition found.
         
@@ -704,10 +710,11 @@ def ConceptExtractor_methanation_diffMCs(ontology_filenames = ["Allotrope_OWL"],
         
     """
     # if you want json file instead of excel-file - just uncomment this block
-    with open('concept_statistics_diffMCs.json', 'w') as f:
+    with open("{}concept_statistics_diffMCs.json".format(preprocessed_text_pickle_name), 'w') as f:
         json.dump(statistics_dict_res, f)
     """
     # store metrics in excel-file
     pd.DataFrame(statistics_dict_res).to_excel("./xlsx-files/{}concept_statistics_diffMCs.xlsx".format(preprocessed_text_pickle_name))
     print("Stored metrics for all min_count paramters in ./xlsx-files/{}concept_statistics_diffMCs.xlsx".format(preprocessed_text_pickle_name))
     
+    return defs,statistics_dict_res
