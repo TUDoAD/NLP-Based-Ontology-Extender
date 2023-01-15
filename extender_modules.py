@@ -566,11 +566,30 @@ def definition_sampler(desc_dict):
 # Concept extraction
 ######
 
-##
-# ConceptExtractor_methanation_diffMCs
-# Loads semantic artifacts, loads text-pickle and trains w2v model with desired
-# min_counts outputs list of token and definitions based on min_count list as excel-file
-##
+def IUPAC_goldbook_loader():
+    """
+    Loads the json-file from the IUPAC Goldbook located at ./ontologies/goldbook_vocab.json
+    and returns it as dictionary
+    
+    Returns
+    -------
+    temp_dict: containing the entries of the goldbook vocabulary for further processing.
+
+    """
+    temp_dict = {}
+    with open('./ontologies/goldbook_vocab.json', encoding = "utf8") as json_file:
+        dict_data = json.load(json_file)
+        for entry in dict_data["entries"].keys(): 
+            if dict_data["entries"][entry]["term"] != None:
+                if dict_data["entries"][entry]["definition"] != None:
+                    temp_dict[dict_data["entries"][entry]["term"].lower()] = dict_data["entries"][entry]["definition"]
+                else:
+                    print("IUPAC Goldbook - empty definition in term: {}".format(dict_data["entries"][entry]["term"]))
+                    temp_dict[dict_data["entries"][entry]["term"].lower()] = "[AB] Class with same label also contained in [IUPAC-Goldbook]"
+            else:
+                print("empty entry: {}".format(dict_data["entries"][entry]))
+    return temp_dict  
+
 def ConceptExtractor_methanation_diffMCs(ontology_filenames = ["Allotrope_OWL"], 
                                          use_IUPAC_goldbook = True, 
                                          min_count_list = [1],
@@ -604,21 +623,9 @@ def ConceptExtractor_methanation_diffMCs(ontology_filenames = ["Allotrope_OWL"],
     [class_dict, desc_dict] = onto_loader(ontology_filenames)
     #min_count_list = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,50,100]   
     
-    ## LOADING IUPAC GOLDBOOK 
+    # LOADING IUPAC GOLDBOOK 
     if use_IUPAC_goldbook:
-        temp_dict = {}
-        with open('./ontologies/goldbook_vocab.json', encoding = "utf8") as json_file:
-            dict_data = json.load(json_file)
-            for entry in dict_data["entries"].keys(): 
-                if dict_data["entries"][entry]["term"] != None:
-                    if dict_data["entries"][entry]["definition"] != None:
-                        temp_dict[dict_data["entries"][entry]["term"].lower()] = dict_data["entries"][entry]["definition"]
-                    else:
-                        print("IUPAC Goldbook - empty definition in term: {}".format(dict_data["entries"][entry]["term"]))
-                        temp_dict[dict_data["entries"][entry]["term"].lower()] = "[AB] Class with same label also contained in [IUPAC-Goldbook]"
-                else:
-                    print("empty entry: {}".format(dict_data["entries"][entry]))
-        desc_dict["IUPAC-Goldbook"] = temp_dict    
+        desc_dict["IUPAC-Goldbook"] = IUPAC_goldbook_loader()
     
     # used for later output of statistics regarding extension of ontologies
     statistics_dict_res = {}
