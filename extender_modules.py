@@ -577,26 +577,26 @@ def ConceptExtractor_methanation_diffMCs(ontology_filenames = ["Allotrope_OWL"],
                                          preprocessed_text_pickle_name = "methanation_only_text"):
     """
     Loads semantic artifacts, loads text-pickle and trains w2v model with desired
-    min_counts outputs list of token and definitions based on min_count list as excel-file
-
+    min_count(s). Outputs list of token and definitions based on min_count list as excel-file
+    
     Parameters
     ----------
-    ontology_filenames : TYPE, optional
-        DESCRIPTION. The default is ["Allotrope_OWL"].
-    use_IUPAC_goldbook : TYPE, optional
-        DESCRIPTION. The default is True.
-    min_count_list : TYPE, optional
-        DESCRIPTION. The default is [1].
-    preprocessed_text_pickle_name : TYPE, optional
-        DESCRIPTION. The default is "methanation_only_text".
+    ontology_filenames : List of Strings containing ["bao_complete_merged", "Allotrope_OWL", "chebi", "chmo", "NCIT", "SBO"]- listing ontology names. 
+    For supported names see also def_dict in function description_dicts().
+        
+    use_IUPAC_goldbook : BOOL, optional
+        When true, the goldbook vocabulary is also considered and should be stored at ./ontologies/goldbook_vocab.json . The default is True.
+    min_count_list : List of integers, optional
+        Lists min_count parameters to be considered by the function. The default is [1], such that a min_count of 1 is applied.
+        Using e.g. [1,5] conducts the experiments first with min_count = 1 and then with min_count = 5
+    preprocessed_text_pickle_name : String, optional
+        Used to load the pickle containing the preprocessed (tokenized) text, as input for word2vec, the model pickle should be put in the subdir ./pickle/ . The default is "methanation_only_text".
 
     Returns
     -------
     None.
 
     """
-    
-    
     #[class_dict, desc_dict] = onto_loader(["bao_complete_merged", "Allotrope_OWL", "chebi", "chmo", "NCIT", "SBO"])
     [class_dict, desc_dict] = onto_loader(ontology_filenames)
     #min_count_list = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,50,100]   
@@ -620,28 +620,33 @@ def ConceptExtractor_methanation_diffMCs(ontology_filenames = ["Allotrope_OWL"],
     # used for later output of statistics regarding extension of ontologies
     statistics_dict_res = {}
     
+    # load preprocessed data from pickle
     with open('./pickle/'+preprocessed_text_pickle_name+'.pickle', 'rb') as pickle_file:
         content = pickle.load(pickle_file)
 
-
+    # executed for each min_count parameter set up in list as input
     for min_count in min_count_list:
         print('Training Word2Vec with mincount = {}...'.format(min_count))
         model = create_model(content, min_count)
         name_model = preprocessed_text_pickle_name + '_mc' + str(min_count)
         model.save('./models/' + name_model)
         print('Done!')
-    
-    ## AB HIER WEITER
-    
+        
         word_list = model.wv.index_to_key        
-        output_file_name = "conceptsMC{}_definitions".format(min_count)            
+        output_file_name = "{}conceptsMC{}_definitions".format(preprocessed_text_pickle_name,min_count)            
         df_concepts = pd.DataFrame({"MC {}".format(min_count) :  word_list})
         
+        # allocate statistics_dict that helps to gather some "statistics"/data
+        # on each set of ontology + word2vec token for later use
         statistics_dict = {}
+        
+        # allocate resDict, that later contains the resulting class labels and found definitions to be stored in the dataframe.
         resDict = {}
+        
+        # search for common entries of class labels between set of token (from word2vec) and set of ontology classes (list of class labels for each ontology)
         for loaded_onto in desc_dict:
             summary = []
-            description_set =  list(desc_dict[loaded_onto].keys())
+            description_set =  list(desc_dict[loaded_onto].keys()) #desc_dict["ontology name"].keys() yields the respective class labels from each ontology
             for i in description_set: # comparison of labels
                 try:
                     # Make sure, that no special characters are contained in class-name
@@ -653,7 +658,7 @@ def ConceptExtractor_methanation_diffMCs(ontology_filenames = ["Allotrope_OWL"],
                     print("Passed due to class-name: '{}', Ontology: {}".format(i,loaded_onto))
             resDict[loaded_onto] = summary
         
-        ## output number of labels found for each ontology
+        # output number of labels found for each ontology
         print("=============================================")
         print("Min_Count = {}".format(min_count))
         for key in resDict:
@@ -661,14 +666,12 @@ def ConceptExtractor_methanation_diffMCs(ontology_filenames = ["Allotrope_OWL"],
             statistics_dict[key] = len(resDict[key])
         print("=============================================")
         
-        
         set_1 = [iter_string.lower() for iter_string in list(word_list)]
         ## store prefLabels and definitions
         for i in resDict:
             df_concepts.insert(len(df_concepts.columns),i,'') # empty column with name of ontology
             set_2 = desc_dict[i] # set (Ontology) to compare concepts to
             candidates = list(set(set_1).intersection(set_2)) # intersection of concept_table-list and ontology
-            # print("Found {}/{} common concept names for Ontology {} and rawdata".format(len(candidates),len(set_1),onto_names[i]))
           
             # paste description of class into respective row, when no description exist, 
             # use the class name to mark concepts, which also exist in the ontology
@@ -685,6 +688,9 @@ def ConceptExtractor_methanation_diffMCs(ontology_filenames = ["Allotrope_OWL"],
         df_concepts.to_excel('./xlsx-files/' + output_file_name + '.xlsx') 
         print('Stored common concepts and definitions in ./xlsx-files/{}'.format(output_file_name + '.xlsx'))
         
+        # from here: "statistics" to store some metrics on the run such as summing up the
+        # number of classes with at least 1 definition found.
+        
         # replaces empty strings with NaN entries
         df_conceps_nan = df_concepts.replace(r'^\s*$', np.nan, regex=True)
         
@@ -697,9 +703,11 @@ def ConceptExtractor_methanation_diffMCs(ontology_filenames = ["Allotrope_OWL"],
         statistics_dict_res[min_count] = statistics_dict
         
     """
+    # if you want json file instead of excel-file - just uncomment this block
     with open('concept_statistics_diffMCs.json', 'w') as f:
         json.dump(statistics_dict_res, f)
     """
-    pd.DataFrame(statistics_dict_res).to_excel("./xlsx-files/concept_statistics_diffMCs.xlsx")
-    print('Stored statistics for each loop in ./xlsx-files/concept_statistics_diffMCs.xlsx')
-        
+    # store metrics in excel-file
+    pd.DataFrame(statistics_dict_res).to_excel("./xlsx-files/{}concept_statistics_diffMCs.xlsx".format(preprocessed_text_pickle_name))
+    print("Stored metrics for all min_count paramters in ./xlsx-files/{}concept_statistics_diffMCs.xlsx".format(preprocessed_text_pickle_name))
+    
