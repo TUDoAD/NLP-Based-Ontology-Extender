@@ -598,11 +598,11 @@ def IUPAC_goldbook_loader(mute = True
                 print("empty entry: {}".format(dict_data["entries"][entry]))
     return temp_dict  
 
-def ConceptExtractor_methanation_diffMCs(ontology_filenames = ["Allotrope_OWL"], 
-                                         use_IUPAC_goldbook = True, 
-                                         min_count_list = [1],
-                                         preprocessed_text_pickle_name = "methanation_only_text",
-                                         gb_muted = True):
+def concept_extractor(ontology_filenames = ["Allotrope_OWL"],
+                      use_IUPAC_goldbook = True, 
+                      min_count_list = [1],
+                      preprocessed_text_pickle_name = "methanation_only_text",
+                      gb_muted = True):
     """
     Loads semantic artifacts, loads text-pickle and trains w2v model with desired
     min_count(s). Outputs list of token and definitions based on min_count list and "statistics"/metrics as excel-files in subdir ./xlsx-files/
@@ -749,56 +749,53 @@ def ConceptExtractor_methanation_diffMCs(ontology_filenames = ["Allotrope_OWL"],
 AB HIER WEITER
 """
 
-def Ontology_class_extender(ontology_filenames = ["Allotrope_OWL"], 
+def ontology_class_extender(ontology_filenames = ["SBO"], 
                             use_IUPAC_goldbook = True,
+                            extend_ontology_name = 'Allotrope_OWL',
                             min_count_list = [1],
                             preprocessed_text_pickle_name = "methanation_only_text",
                             similarity_threshold_list = [0.999],
-                            ontology_name = 'Allotrope_OWL',
                             gb_muted = True): 
     
+    # WARNING: only works, if ontology to be extended has "prefLabel" annotation for labels!
+    #          some (easy) code changes might be needed in function "ontology_class_extender" 
+    #          to adapt to other ontologies
     # parameters:
     #model_name_list = ['methanation_only_text_mc1','methanation_only_text_mc5',
     #                   'methanation_only_text_mc10','methanation_only_text_mc25']    
-    min_count_list = range(1,26)
-    model_name_list = ['methanation_only_text_mc'+str(i) for i in min_count_list]
+    #min_count_list = range(1,26)
+    print("=============================================")
+    print("WARNING: 'ontology_class_extender' only works, if ontology to be extended has 'prefLabel' annotation for labels! Some (easy) code changes might be needed in function to adapt to other ontologies")
+    print("=============================================")
     
-    #similarity_threshold_list = [0.8,0.9,0.95,0.99,0.995,0.996,0.997,0.998,0.999]
-    #similarity_threshold_list = [0.999]#,0.9995,1]
+    # 
+    model_name_list = [preprocessed_text_pickle_name + '_mc' + str(i) for i in min_count_list]
     
-    #model_name = 'methanation_only_text_mc1'
-    #model_name = 'methanation_only_text_mc10'
-    #model_name = 'methanation_only_text_mc5'
-    #model_name = 'methanation_only_text_mc25'
-    #ontology_name = 'Allotrope_OWL'
-    # similarity_threshold = 0.99
-    
-    
-    ## Allocation of lists used for statistics
+    # Allocation of lists used for "statistics"/metrics
     modelname_list = []
     sim_list = []
     new_classes_list = []
     unique_list = []
     model_token_number = []
     unique_len_all_concepts_found = []
-    ##
+    #
     
-    ## Load Definitions
-    [class_dict, desc_dict] = onto_loader(["chmo", "chebi", "NCIT", "bao_complete_merged", "SBO"])
+    # Load Definitions and classlabels from ontologies in ontology_filenames
+    [class_dict, desc_dict] = onto_loader(ontology_filenames)
+    #
     
-    
-    ## LOADING IUPAC GOLDBOOK 
+    # LOADING IUPAC GOLDBOOK 
     if use_IUPAC_goldbook:
         desc_dict["IUPAC-Goldbook"] = IUPAC_goldbook_loader(gb_muted)
+    #
     
-    ##
+    # loop through each model name, provided in the model_name_list 
     for model_name in model_name_list:
         for similarity_threshold in similarity_threshold_list:
            
-            # loading ontology from local file 
-            #[class_dict, desc_dict] = onto_loader([ontology_name])
+            # loading ontology from local file to extend
             Onto_World = owlready2.World()
-            onto_local = Onto_World.get_ontology('./ontologies/' + ontology_name + '.owl').load()
+            onto_local = Onto_World.get_ontology('./ontologies/' + extend_ontology_name + '.owl').load()
             
             # load word2vec model
             model_test = Word2Vec.load('./models/' + model_name)
@@ -806,7 +803,6 @@ def Ontology_class_extender(ontology_filenames = ["Allotrope_OWL"],
             
             # get all the preferred labels of the ontology:
             count = 0
-            
             class_list = []
             for i in list(onto_local.classes()):
                 try: 
@@ -837,15 +833,19 @@ def Ontology_class_extender(ontology_filenames = ["Allotrope_OWL"],
                     if newlist: # entry found
                         summary.append(newlist)
                 except:
-                    print("Passed '{}', Ontology: {}".format(i,ontology_name))
-            resDict[ontology_name] = summary
+                    print("Passed '{}', Ontology: {}".format(i,extend_ontology_name))
+            resDict[extend_ontology_name] = summary
             
             with open('./json-files/FoundClasses' + model_name + str(similarity_threshold) + '.json', 'w') as jsonfile:
                 json.dump(resDict, jsonfile)
                 
             # List of classes in Vectorspace and 
-            # current selected ontology (onto_local) = resDict[ontology_name]
+            # current selected ontology (onto_local) = resDict[extend_ontology_name]
             
+            ## Extension of ontology with classes
+            # start with definining superclass "w2vConcept" that gathers all automatically added classes 
+            # and conceptually_related_to as suggested semantic relationship between classes
+            ##
             with onto_local:
                 class w2vConcept(Thing):
                     prefLabel = 'w2vConcept'
@@ -855,11 +855,11 @@ def Ontology_class_extender(ontology_filenames = ["Allotrope_OWL"],
                     definition = 'Created automatically by [AB] to specify relations of concepts to newly introduced concepts by word-vector similarity.'
                     python_name = "conceptRelTo"
                     
-            for concept in resDict[ontology_name]:
+            for concept in resDict[extend_ontology_name]:
                 # iterates through classes of resDict and temp_class = class of the 
                 # ontology_name ontology with same label of concept
             
-                ## LABEL OR PREFLABEL
+                ## LABEL OR PREFLABEL ? Important setting, when using different ontologies for extension!
                 ## label or prefLabel
                 temp_class = onto_local.search_one(prefLabel = concept[0]) 
                 tuple_similarities = model_test.wv.most_similar(positive = concept[0], topn = 5)
@@ -913,7 +913,7 @@ def Ontology_class_extender(ontology_filenames = ["Allotrope_OWL"],
                     
                     w2vConceptClass.comment.append(comment_string)
 
-            onto_savestring = './ontologies_output/' + ontology_name + '_ext_' + model_name + '_' + str(similarity_threshold) + '.owl'
+            onto_savestring = './ontologies_output/' + extend_ontology_name + '_ext_' + model_name + '_' + str(similarity_threshold) + '.owl'
             onto_local.save(file = onto_savestring)  
             
             print("=============================================")

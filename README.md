@@ -15,6 +15,13 @@
 Onto_Extender_mc_test.py -> Extends ontology by classes based on selected ontology, similarity threshold and w2vec model 
 Ontology_normalizer_w2v_MC1-25.py -> Annotates classes in extended ontology with definitions
 
+## Todos: 
+
+Einmal am Anfang vom run.py !?:
+##Load Definitions 
+[class_dict, desc_dict] = onto_loader(ontology_filenames)
+
+- Umbenennen von extender_modules.py zu w2v_ontology_extender_modules.py - dann "import w2v_ontology_extender_modules as w2v_ext"
 
 #####
 
