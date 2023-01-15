@@ -38,7 +38,7 @@ Onto_filenames_ext = ["bao_complete_merged", "chebi", "chmo", "NCIT", "SBO"]
 extend_ontology = "Allotrope_OWL"
 #min_counts_list = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,50,100]   
 similarity_threshold_list = [0.8,0.9,0.95,0.99,0.995,0.996,0.997,0.998,0.999]
-
+mute_prints = True
 
 extender_modules.ontology_class_extender(Onto_filenames_ext,
                                          use_IUPAC_goldbook,
@@ -46,7 +46,7 @@ extender_modules.ontology_class_extender(Onto_filenames_ext,
                                          min_counts_list,
                                          pickle_name,
                                          similarity_threshold_list,
-                                         goldbook_mute)
+                                         mute_prints)
 
 
 

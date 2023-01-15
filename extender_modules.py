@@ -481,6 +481,7 @@ def onto_loader(ontology_names):
         DESCRIPTION.
 
     """
+    print("=============================================")
     # Ontologies to load
     # ontology_names = ["chmo","Allotrope_OWL", "chebi", "NCIT", "SBO"]
     class_list_dict = {}
@@ -492,7 +493,7 @@ def onto_loader(ontology_names):
         description_list_dict[name] = description_dicts(class_list_dict[name],name)
     
     # existing_keys = names of ontologies
-    existing_keys = list(description_list_dict.keys())
+    #existing_keys = list(description_list_dict.keys())
         
     print("Ontologies {} loaded. \n PLEASE CHECK if class descriptions are not empty.".format(str(ontology_names)))
     print("=============================================")
@@ -755,11 +756,12 @@ def ontology_class_extender(ontology_filenames = ["SBO"],
                             min_count_list = [1],
                             preprocessed_text_pickle_name = "methanation_only_text",
                             similarity_threshold_list = [0.999],
-                            gb_muted = True): 
+                            mute_prints = True): 
     
     # WARNING: only works, if ontology to be extended has "prefLabel" annotation for labels!
     #          some (easy) code changes might be needed in function "ontology_class_extender" 
-    #          to adapt to other ontologies
+    #          to adapt to other ontologies. search for comment "#change here, if prefLabel is not correct for ontology to be extended"
+    #          if other than prefLabel is desired
     # parameters:
     #model_name_list = ['methanation_only_text_mc1','methanation_only_text_mc5',
     #                   'methanation_only_text_mc10','methanation_only_text_mc25']    
@@ -786,10 +788,11 @@ def ontology_class_extender(ontology_filenames = ["SBO"],
     
     # LOADING IUPAC GOLDBOOK 
     if use_IUPAC_goldbook:
-        desc_dict["IUPAC-Goldbook"] = IUPAC_goldbook_loader(gb_muted)
+        desc_dict["IUPAC-Goldbook"] = IUPAC_goldbook_loader(mute_prints)
     #
     
-    # loop through each model name, provided in the model_name_list 
+    # loop through each model name, provided in the model_name_list and through each similarity threshold
+    # to extend the ontology "extend_ontology_name" by classes and relations based on different min_counts, sim_thresholds
     for model_name in model_name_list:
         for similarity_threshold in similarity_threshold_list:
            
@@ -812,9 +815,6 @@ def ontology_class_extender(ontology_filenames = ["SBO"],
                     count += 1
                     pass
             #print('Not able to include {} classes due to missing label'.format(count))
-            ##
-            #   conceptList = Liste mit Konzepten aus MC = 10, die auch in AFO drin sind?
-            ##
             
             # allocate resultDictionary (only gets important, when more than 1 ontology is loaded)
             resDict = {}
@@ -833,25 +833,27 @@ def ontology_class_extender(ontology_filenames = ["SBO"],
                     if newlist: # entry found
                         summary.append(newlist)
                 except:
-                    print("Passed '{}', Ontology: {}".format(i,extend_ontology_name))
+                    if not mute_prints:
+                        print("Passed '{}', Ontology: {}".format(i,extend_ontology_name))
             resDict[extend_ontology_name] = summary
             
-            with open('./json-files/FoundClasses' + model_name + str(similarity_threshold) + '.json', 'w') as jsonfile:
+            # List of classes in vectorspace and 
+            # current selected ontology (onto_local) = resDict[extend_ontology_name]
+            # dump found classes in json file for later checkup, metrics, etc.
+            with open('./json-files/FoundClasses_'+ extend_ontology_name +'_' + model_name +'_' +str(similarity_threshold) + '.json', 'w') as jsonfile:
                 json.dump(resDict, jsonfile)
                 
-            # List of classes in Vectorspace and 
-            # current selected ontology (onto_local) = resDict[extend_ontology_name]
-            
-            ## Extension of ontology with classes
+            ## 
+            # Extension of ontology with classes
             # start with definining superclass "w2vConcept" that gathers all automatically added classes 
             # and conceptually_related_to as suggested semantic relationship between classes
             ##
             with onto_local:
                 class w2vConcept(Thing):
-                    prefLabel = 'w2vConcept'
+                    prefLabel = 'w2vConcept'#change here, if prefLabel is not correct for ontology to be extended
                     definition = 'A concept generated automatically by [AB] to gather all concepts added by word2vec'
                 class conceptually_related_to(ObjectProperty):
-                    prefLabel = 'conceptually related to'
+                    prefLabel = 'conceptually related to'#change here, if prefLabel is not correct for ontology to be extended
                     definition = 'Created automatically by [AB] to specify relations of concepts to newly introduced concepts by word-vector similarity.'
                     python_name = "conceptRelTo"
                     
@@ -861,9 +863,8 @@ def ontology_class_extender(ontology_filenames = ["SBO"],
             
                 ## LABEL OR PREFLABEL ? Important setting, when using different ontologies for extension!
                 ## label or prefLabel
-                temp_class = onto_local.search_one(prefLabel = concept[0]) 
+                temp_class = onto_local.search_one(prefLabel = concept[0]) #change here, if prefLabel is not correct for ontology to be extended
                 tuple_similarities = model_test.wv.most_similar(positive = concept[0], topn = 5)
-                # new_classes = [tuple_similarities[i][0] for i in range(len(tuple_similarities))]
                 new_classes = []
                 
                 for i in range(len(tuple_similarities)):
@@ -872,13 +873,14 @@ def ontology_class_extender(ontology_filenames = ["SBO"],
                 
                 w2v_all_concepts_found.extend(new_classes)
                 
+                # create new classes, and pose relation "conceptually related to" 
                 with onto_local:
                     for i in new_classes: # create new class 
                         ## check, if class already exists?
                         #existing_class = onto_local.search_one(prefLabel = i)
-                        if onto_local.search_one(prefLabel = i):
+                        if onto_local.search_one(prefLabel = i):#change here, if prefLabel is not correct for ontology to be extended
                             ## LABEL OR PREFLABEL
-                            new_class = onto_local.search_one(prefLabel = i)
+                            new_class = onto_local.search_one(prefLabel = i)#change here, if prefLabel is not correct for ontology to be extended
                             #new_class.conceptually_related_to = [temp_class]
                             new_class.is_a.append(conceptually_related_to.some(temp_class))
                         else:
@@ -889,10 +891,12 @@ def ontology_class_extender(ontology_filenames = ["SBO"],
                             new_class.comment.append('Created automatically by [AB] based on word2vec output of concept name "{}"'.format(concept[0]))
                             #new_class.conceptually_related_to = [temp_class]
                             new_class.is_a.append(conceptually_related_to.some(temp_class))                       
-                            
-                            
+
+            # count the subclasses of w2vConcept for later metrics, these are all classes newly created and inserted to the ontology
+            # i.e. the classes the ontology was extended with
             different_class_count = len(list(onto_local.w2vConcept.subclasses()))
             
+            # extend ontologies with definition strings from other ontologies/goldbook
             for w2vConceptClass in list(onto_local.w2vConcept.subclasses()):
                 for ontology_names in desc_dict:
                     classlabel = w2vConceptClass.name
@@ -907,7 +911,8 @@ def ontology_class_extender(ontology_filenames = ["SBO"],
                     else:
                         if defstring:
                             comment_string = defstring + "\nFound by [AB] in [" + ontology_names + "]"
-                            print("def of {} found in ontology {}".format(classlabel, ontology_names))
+                            if not mute_prints:
+                                print("def of {} found in ontology {}".format(classlabel, ontology_names))
                         else:
                             comment_string = "[AB] Class with same label also contained in [{}] unable to obtain definition".format(ontology_names)
                     
@@ -920,7 +925,7 @@ def ontology_class_extender(ontology_filenames = ["SBO"],
             print("model_name = {} \n similarity_threshold = {}".format(model_name,similarity_threshold))
             print('Added {} new classes based on word2vec model {}. \nFile saved as {}.'.format(different_class_count,model_name, onto_savestring))
             
-            with open('./json-files/FoundClasses' + model_name + str(similarity_threshold) + '.json', 'r') as f:
+            with open('./json-files/FoundClasses_'+ extend_ontology_name +'_' + model_name +'_' +str(similarity_threshold) + '.json', 'r') as f:
                 data = json.load(f)
             
             unique_dict = {}
