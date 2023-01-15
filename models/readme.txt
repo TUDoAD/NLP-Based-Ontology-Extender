@@ -1,0 +1,1 @@
+Word2Vec Models will be stored as pickles here

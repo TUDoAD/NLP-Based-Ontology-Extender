@@ -594,7 +594,9 @@ def ConceptExtractor_methanation_diffMCs(ontology_filenames = ["Allotrope_OWL"],
 
     Returns
     -------
-    None.
+    concept_dict: dictionary containing all common labels of text data and ontologies respective to min_counts.
+                structure (e.g): {min_count 1:{[Common labels]}}
+    statistics_dict_res: dictionary containing metrics of the runs for all different min_count params set up in input
 
     """
     #[class_dict, desc_dict] = onto_loader(["bao_complete_merged", "Allotrope_OWL", "chebi", "chmo", "NCIT", "SBO"])
@@ -630,15 +632,15 @@ def ConceptExtractor_methanation_diffMCs(ontology_filenames = ["Allotrope_OWL"],
 
     # executed for each min_count parameter set up in list as input
     for min_count in min_count_list:
-        print('Training Word2Vec with mincount = {}...'.format(min_count))
+        print('Training Word2Vec with min_count = {}...'.format(min_count))
         model = create_model(content, min_count)
         name_model = preprocessed_text_pickle_name + '_mc' + str(min_count)
         model.save('./models/' + name_model)
         print('Done!')
         
         word_list = model.wv.index_to_key        
-        output_file_name = "{}conceptsMC{}_definitions".format(preprocessed_text_pickle_name,min_count)            
-        df_concepts = pd.DataFrame({"MC {}".format(min_count) :  word_list})
+        output_file_name = "{}_conceptsMC{}_definitions".format(preprocessed_text_pickle_name,min_count)            
+        df_concepts = pd.DataFrame({"Common labels" :  word_list})
         
         # allocate statistics_dict that helps to gather some "statistics"/data
         # on each set of ontology + word2vec token for later use
@@ -682,17 +684,18 @@ def ConceptExtractor_methanation_diffMCs(ontology_filenames = ["Allotrope_OWL"],
             for j in candidates:
                 if desc_dict[i][j]: # not empty
                     try:    
-                        df_concepts.loc[getattr(df_concepts, "MC {}".format(min_count)) == j, i] =  desc_dict[i][j] # changes entry in ontology column to definition, when in concepts
+                        df_concepts.loc[getattr(df_concepts, "Common labels") == j, i] =  desc_dict[i][j] # changes entry in ontology column to definition, when in concepts
                     except:
-                        df_concepts.loc[getattr(df_concepts, "MC {}".format(min_count)) == j, i] = str(desc_dict[i][j])
+                        df_concepts.loc[getattr(df_concepts, "Common labels") == j, i] = str(desc_dict[i][j])
                 else:
-                    df_concepts.loc[getattr(df_concepts, "MC {}".format(min_count)) == j, i] =  j # changes entry in ontology column to definition, when in concepts
+                    df_concepts.loc[getattr(df_concepts, "Common labels") == j, i] =  j # changes entry in ontology column to definition, when in concepts
         
         #save dataframe as excel sheet
         df_concepts.to_excel('./xlsx-files/' + output_file_name + '.xlsx') 
         print('Stored common concepts and definitions in ./xlsx-files/{}'.format(output_file_name + '.xlsx'))
         
-        .append(df_concepts)
+        # update concept_dict with entries for current min_count
+        concept_dict.update({"min_count {}".format(min_count):df_concepts.to_dict()})
         
         # from here: "statistics" to store some metrics on the run such as summing up the
         # number of classes with at least 1 definition found.
@@ -710,11 +713,11 @@ def ConceptExtractor_methanation_diffMCs(ontology_filenames = ["Allotrope_OWL"],
         
     """
     # if you want json file instead of excel-file - just uncomment this block
-    with open("{}concept_statistics_diffMCs.json".format(preprocessed_text_pickle_name), 'w') as f:
+    with open("{}_concept_statistics_diffMCs.json".format(preprocessed_text_pickle_name), 'w') as f:
         json.dump(statistics_dict_res, f)
     """
     # store metrics in excel-file
-    pd.DataFrame(statistics_dict_res).to_excel("./xlsx-files/{}concept_statistics_diffMCs.xlsx".format(preprocessed_text_pickle_name))
-    print("Stored metrics for all min_count paramters in ./xlsx-files/{}concept_statistics_diffMCs.xlsx".format(preprocessed_text_pickle_name))
+    pd.DataFrame(statistics_dict_res).to_excel("./xlsx-files/{}_concept_statistics_diffMCs.xlsx".format(preprocessed_text_pickle_name))
+    print("Stored metrics for all min_count paramters in ./xlsx-files/{}_concept_statistics_diffMCs.xlsx".format(preprocessed_text_pickle_name))
     
-    return defs,statistics_dict_res
+    return concept_dict,statistics_dict_res
