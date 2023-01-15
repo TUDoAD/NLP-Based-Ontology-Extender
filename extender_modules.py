@@ -577,7 +577,8 @@ def ConceptExtractor_methanation_diffMCs(ontology_filenames = ["Allotrope_OWL"],
                                          preprocessed_text_pickle_name = "methanation_only_text"):
     """
     Loads semantic artifacts, loads text-pickle and trains w2v model with desired
-    min_count(s). Outputs list of token and definitions based on min_count list as excel-file
+    min_count(s). Outputs list of token and definitions based on min_count list and "statistics"/metrics as excel-files in subdir ./xlsx-files/
+    trained word2vec models are pickled in subdir ./models/
     
     Parameters
     ----------
@@ -595,7 +596,7 @@ def ConceptExtractor_methanation_diffMCs(ontology_filenames = ["Allotrope_OWL"],
     Returns
     -------
     concept_dict: dictionary containing all common labels of text data and ontologies respective to min_counts.
-                structure (e.g): {min_count 1:{[Common labels]}}
+                structure (e.g): {min_count 1:{[{Common labels:{0:'catalyst', 1:'methanation', 2:'temperature'}},{Allotrope_OWL:{0:'', 1:'', 2:'A temperature (datum) is a quantity facet that quantifies some temperature. [Allotrope]'}}]}
     statistics_dict_res: dictionary containing metrics of the runs for all different min_count params set up in input
 
     """
@@ -721,3 +722,5 @@ def ConceptExtractor_methanation_diffMCs(ontology_filenames = ["Allotrope_OWL"],
     print("Stored metrics for all min_count paramters in ./xlsx-files/{}_concept_statistics_diffMCs.xlsx".format(preprocessed_text_pickle_name))
     
     return concept_dict,statistics_dict_res
+
+
