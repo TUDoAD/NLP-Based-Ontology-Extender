@@ -3,6 +3,7 @@ This repository contains the codes for the NLP-Based-Ontology-Extender by Alexan
 The code can be used to extend ontologies automatically based on text data with help of Word2Vec.
 
 **Needed modules (list may not be complete!):**
+
 `pip install owlready2`
 
 `pip install gensim`
