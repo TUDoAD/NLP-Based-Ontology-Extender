@@ -10,11 +10,11 @@ M. Völkenrath, N. Kockmann
 """
 
 
-import extender_modules
+import w2v_ontology_extender_modules as w2v_ext
 
 # reads in pdf files stored in subdir ./import/
 # and stores preprocessed data as pickles in subdir ./pickle/
-extender_modules.textmining("test")
+w2v_ext.textmining("test")
 
 
 ##
@@ -27,11 +27,11 @@ pickle_name = "methanation_only_text"
 goldbook_mute = False
 
 # train w2v models based on min_count and store in ./models/ 
-concept_dictionary, metrics = extender_modules.concept_extractor(Onto_filenames,
-                                                                 use_IUPAC_goldbook,
-                                                                 min_counts_list,
-                                                                 pickle_name,
-                                                                 goldbook_mute)
+concept_dictionary, metrics = w2v_ext.concept_extractor(Onto_filenames,
+                                                        use_IUPAC_goldbook,
+                                                        min_counts_list,
+                                                        pickle_name,
+                                                        goldbook_mute)
 ## extend ontology AFO
 Onto_filenames_ext = ["bao_complete_merged", "chebi", "chmo", "NCIT", "SBO"]
 #use_IUPAC_goldbook = True
@@ -40,15 +40,17 @@ extend_ontology = "Allotrope_OWL"
 similarity_threshold_list = [0.8,0.9,0.95,0.99,0.995,0.996,0.997,0.998,0.999]
 mute_prints = True
 
-extender_modules.ontology_class_extender(Onto_filenames_ext,
-                                         use_IUPAC_goldbook,
-                                         extend_ontology,
-                                         min_counts_list,
-                                         pickle_name,
-                                         similarity_threshold_list,
-                                         mute_prints)
+w2v_ext.ontology_class_extender(Onto_filenames_ext,
+                                use_IUPAC_goldbook,
+                                extend_ontology,
+                                min_counts_list,
+                                pickle_name,
+                                similarity_threshold_list,
+                                mute_prints)
 
 
+
+w2v_ext.ontology_class_annotator()
 
 #
 
