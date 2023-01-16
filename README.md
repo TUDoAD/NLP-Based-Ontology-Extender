@@ -4,7 +4,9 @@ The code can be used to extend ontologies automatically based on text data with 
 
 **Needed modules (list may not be complete!):**
 `pip install owlready2`
+
 `pip install gensim`
+
 `pip install pdfminer`
 
 
