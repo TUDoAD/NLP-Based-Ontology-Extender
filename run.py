@@ -40,13 +40,13 @@ extend_ontology = "Allotrope_OWL"
 similarity_threshold_list = [0.8,0.9,0.95,0.99,0.995,0.996,0.997,0.998,0.999]
 mute_prints = True
 
-w2v_ext.ontology_class_extender(Onto_filenames_ext,
-                                use_IUPAC_goldbook,
-                                extend_ontology,
-                                min_counts_list,
-                                pickle_name,
-                                similarity_threshold_list,
-                                mute_prints)
+metrics_onto_extension = w2v_ext.ontology_class_extender(Onto_filenames_ext,
+                                                         use_IUPAC_goldbook,
+                                                         extend_ontology,
+                                                         min_counts_list,
+                                                         pickle_name,
+                                                         similarity_threshold_list,
+                                                         mute_prints)
 
 
 
