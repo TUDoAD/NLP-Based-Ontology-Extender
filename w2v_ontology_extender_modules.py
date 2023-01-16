@@ -955,14 +955,6 @@ def ontology_class_extender(ontology_filenames = ["SBO"],
 ###
 #
 ###
-
-# -*- coding: utf-8 -*-
-"""
-Created on Mon Aug 22 13:35:02 2022
-
-@author: Alexander Behr 
-"""
-
 ##
 # Annotates classes in extended ontology with definitions
 ##
