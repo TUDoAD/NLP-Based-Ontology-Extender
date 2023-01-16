@@ -10,7 +10,7 @@ The code can be used to extend ontologies automatically based on text data with 
 
 ## run.py (main program)
 Run this file to execute the whole workflow as shown below
-![Program Scheme](figures/Code_workflow.png?raw=true "scheme of overall workflow executed by running run.py")
+![Program Scheme](image/Code_workflow.png?raw=true "scheme of overall workflow executed by running run.py")
 
 
 ## todo:
