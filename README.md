@@ -43,7 +43,7 @@ metrics_onto_extension = w2v_ext.ontology_class_extender(Onto_filenames_ext,
                                                          similarity_threshold_list,
                                                          mute_prints)
 ```
-Extends `extend_ontology_name` by classes and relations and stores the modified ontologies in subdir `./ontologies_output/`. 
+Extends `extend_ontology` (name of ontology provided as string) by classes and relations and stores the modified ontologies in subdir `./ontologies_output/`. 
 Loads semantic artifacts and text-pickle to train w2v model with desired min_counts outputs list of token and definitions based on min_count list. 
 Returns metrics as dict and stores it as excel-file in subdir `./xlsx-files/`.
 
@@ -54,7 +54,12 @@ Ontology_normalizer_w2v_MC1-25.py -> Annotates classes in extended ontology with
 
 #####
 
-Supported ontologies and semantic artifacts stored in subdir ./ontologies/ :
+Supported ontologies and semantic artifacts, when stored in subdir `./ontologies/`:
+
+| Ontology / Semantic Artifact | Stored in `./ontologies/` as: |
+| ---------------------------- | ----------------------------- |
+| BioAssayOntology             | bao_complete_merged.owl       |
+| Content Cell  | Content Cell  |
 
 Name| stored in ./ontologies/ as:| valid argument name for extender_modules.ConceptExtractor_methanation_diffMCs()| Link to file 
 BioAssayOntology |"bao_complete_merged.owl"|"bao_complete_merged"|
