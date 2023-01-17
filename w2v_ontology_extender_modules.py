@@ -757,7 +757,39 @@ def ontology_class_extender(ontology_filenames = ["SBO"],
                             preprocessed_text_pickle_name = "methanation_only_text",
                             similarity_threshold_list = [0.999],
                             mute_prints = True): 
+    """
+    Extends "extend_ontology_name" by classes and relations and stores the modified ontologies in subdir "./ontologies_output/".
+    Loads semantic artifacts and text-pickle to train w2v model with desired min_counts outputs list of token and definitions based on min_count list. 
+    Returns metrics as excel-file and dict.
+    WARNING: only works, if ontology to be extended has "prefLabel" annotation for labels!
+             some (easy) code changes might be needed in function "ontology_class_extender" 
+             to adapt to other ontologies. search for comment "#change here, if prefLabel is not correct for ontology to be extended"
+             if other than prefLabel is desired
+             
     
+    Parameters
+    ----------
+    ontology_filenames : TYPE, optional
+        DESCRIPTION. The default is ["SBO"].
+    use_IUPAC_goldbook : TYPE, optional
+        DESCRIPTION. The default is True.
+    extend_ontology_name : TYPE, optional
+        DESCRIPTION. The default is 'Allotrope_OWL'.
+    min_count_list : TYPE, optional
+        DESCRIPTION. The default is [1].
+    preprocessed_text_pickle_name : TYPE, optional
+        DESCRIPTION. The default is "methanation_only_text".
+    similarity_threshold_list : TYPE, optional
+        DESCRIPTION. The default is [0.999].
+    mute_prints : TYPE, optional
+        DESCRIPTION. The default is True.
+
+    Returns
+    -------
+    metrics_dict : TYPE
+        DESCRIPTION.
+
+    """
     # WARNING: only works, if ontology to be extended has "prefLabel" annotation for labels!
     #          some (easy) code changes might be needed in function "ontology_class_extender" 
     #          to adapt to other ontologies. search for comment "#change here, if prefLabel is not correct for ontology to be extended"
@@ -956,9 +988,7 @@ def ontology_class_extender(ontology_filenames = ["SBO"],
     
     return metrics_dict
 
-###
-#
-###
+
 ##
 # Annotates classes in extended ontology with definitions
 ##
