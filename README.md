@@ -21,8 +21,8 @@ Contains all functions used in run.py to execute the data extraction, train the 
 ```
 textmining(<string>)
 ```
-used for retrieval of text data from pdfs stored in ./import/ subdir. Preprocessed text containing only noun and propnoun token stored in pickle with name "name" in subdir ./pickle/.
-Raw read-in text stored as pickle "name_raw" in subdir ./pickle/.
+used for retrieval of text data from pdfs stored in `./import/` subdir. Preprocessed text containing only noun and propnoun token stored in pickle with name "name" in subdir `./pickle/`.
+Raw read-in text stored as pickle "name_raw" in subdir `./pickle/`.
 
 ```
 concept_dictionary, metrics = w2v_ext.concept_extractor(Onto_filenames,
@@ -31,9 +31,21 @@ concept_dictionary, metrics = w2v_ext.concept_extractor(Onto_filenames,
                                                         pickle_name,
                                                         goldbook_mute)
 ```
-Loads semantic artifacts, loads text-pickle and trains w2v model with desired min_count(s). Outputs list of token and definitions based on min_count list and "statistics"/metrics as excel-files in subdir ./xlsx-files/ trained word2vec models are pickled in subdir ./models/
-Also outputs concept_dictionary, a dictionary containing all common labels of text data and ontologies respective to min_counts.
+Loads semantic artifacts, loads text-pickle and trains w2v model with desired min_count(s). Outputs list of token and definitions based on min_count list and "statistics"/metrics as excel-files in subdir `./xlsx-files/` trained word2vec models are pickled in subdir `./models/`.
+Also outputs concept_dictionary, a dictionary containing all common labels of text data and ontologies respective to `min_count`s.
 
+```
+metrics_onto_extension = w2v_ext.ontology_class_extender(Onto_filenames_ext,
+                                                         use_IUPAC_goldbook,
+                                                         extend_ontology,
+                                                         min_counts_list,
+                                                         pickle_name,
+                                                         similarity_threshold_list,
+                                                         mute_prints)
+```
+Extends `extend_ontology_name` by classes and relations and stores the modified ontologies in subdir `./ontologies_output/`. 
+Loads semantic artifacts and text-pickle to train w2v model with desired min_counts outputs list of token and definitions based on min_count list. 
+Returns metrics as dict and stores it as excel-file in subdir `./xlsx-files/`.
 
 
 ## todo:
