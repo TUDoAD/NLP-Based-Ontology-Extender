@@ -56,14 +56,12 @@ Ontology_normalizer_w2v_MC1-25.py -> Annotates classes in extended ontology with
 
 Supported ontologies and semantic artifacts, when stored in subdir `./ontologies/`:
 
-| Ontology / Semantic Artifact | Stored in `./ontologies/` as: |
-| ---------------------------- | ----------------------------- |
-| BioAssayOntology             | bao_complete_merged.owl       |
-| Content Cell  | Content Cell  |
-
-Name| stored in ./ontologies/ as:| valid argument name for extender_modules.ConceptExtractor_methanation_diffMCs()| Link to file 
-BioAssayOntology |"bao_complete_merged.owl"|"bao_complete_merged"|
-, "Allotrope_OWL", "chebi", "chmo", "NCIT", "SBO"
-
-goldbook_vocab.json
-
+| Ontology / Semantic Artifact | Stored in `./ontologies/` as: | Valid argument string in `w2v_ontology_extender_modules.py`|
+| ---------------------------- | ----------------------------- |----------------------------------------------------------------------|
+| Allotrope Foundation Ontology| Allotrope_OWL.owl             | "Allotrope_OWL"|
+| BioAssayOntology             | bao_complete_merged.owl       | "bao_complete_merged" |
+| Chemical Entities of Biological interest | chebi.owl | "chebi" |
+| Chemical Methods Ontology | chmo.owl | "chmo" |
+| System Biology Ontology | SBO.owl | "SBO" |
+| National Cancer Institute Thesaurus| NCIT.owl | "NCIT"|
+| IUPAC-Goldbook| goldbook_vocab.json | via bool: `use_IUPAC_goldbook = True` as argument|
