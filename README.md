@@ -46,12 +46,13 @@ metrics_onto_extension = w2v_ext.ontology_class_extender(Onto_filenames_ext,
 ```
 Extends `extend_ontology` (name of ontology provided as string) by classes and relations and stores the modified ontologies in subdir `./ontologies_output/`. 
 Loads semantic artifacts and text-pickle to train w2v model with desired min_counts outputs list of token and definitions based on min_count list. 
-Returns metrics as dict and stores it as excel-file in subdir `./xlsx-files/`.
+Returns metrics as dict and stores them as excel-file in subdir `./xlsx-files/`.
 
 ```
 w2v_ext.ontology_class_annotator()
 ```
-Annotates classes in extended ontology with definitions
+Annotates classes in extended ontology with definitions from other semantic artifacts (string values) and stores the input ontology in `./ontologies_output/`.
+Returns metrics as dict and stores it as excel-file in subdir `./xlsx-files/`.
 
 
 ## Supported Semantic Artifacts
