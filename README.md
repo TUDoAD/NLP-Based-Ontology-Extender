@@ -18,6 +18,7 @@ Run this file to execute the whole workflow as shown below
 ## w2v_ontology_extender_modules.py (module with functions)
 Contains all functions used in run.py to execute the data extraction, train the word2vec models and extend the ontologies as described.
 
+## Main Program Functions
 ```
 textmining(<string>)
 ```
@@ -47,12 +48,13 @@ Extends `extend_ontology` (name of ontology provided as string) by classes and r
 Loads semantic artifacts and text-pickle to train w2v model with desired min_counts outputs list of token and definitions based on min_count list. 
 Returns metrics as dict and stores it as excel-file in subdir `./xlsx-files/`.
 
+```
+w2v_ext.ontology_class_annotator()
+```
+Annotates classes in extended ontology with definitions
 
-## todo:
-Ontology_normalizer_w2v_MC1-25.py -> Annotates classes in extended ontology with definitions
 
-
-#####
+## Supported Semantic Artifacts
 
 Supported ontologies and semantic artifacts, when stored in subdir `./ontologies/`:
 
