@@ -23,11 +23,15 @@ Contains all functions used in run.py to execute the data extraction, train the 
 Raw read-in text stored as pickle "name_raw" in subdir ./pickle/.
 
 `concept_extractor(ontology_filenames = ["Allotrope_OWL"],
-                      use_IUPAC_goldbook = True, 
-                      min_count_list = [1],
-                      preprocessed_text_pickle_name = "methanation_only_text",
-                      gb_muted = True):`
 
+                      use_IUPAC_goldbook = True, 
+
+                      min_count_list = [1],
+
+                      preprocessed_text_pickle_name = "methanation_only_text",
+
+                      gb_muted = True):`
+Loads semantic artifacts, loads text-pickle and trains w2v model with desired min_count(s). Outputs list of token and definitions based on min_count list and "statistics"/metrics as excel-files in subdir ./xlsx-files/ trained word2vec models are pickled in subdir ./models/
 
 ## todo:
 Ontology_normalizer_w2v_MC1-25.py -> Annotates classes in extended ontology with definitions
