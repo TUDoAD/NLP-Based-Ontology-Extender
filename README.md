@@ -4,12 +4,11 @@ The code can be used to extend ontologies automatically based on text data with 
 
 **Needed modules (list may not be complete!):**
 
-`pip install owlready2`
-
-`pip install gensim`
-
-`pip install pdfminer`
-
+```
+pip install owlready2
+pip install gensim
+pip install pdfminer
+```
 
 ## run.py (main program)
 Run this file to execute the whole workflow as shown below
@@ -19,19 +18,23 @@ Run this file to execute the whole workflow as shown below
 ## w2v_ontology_extender_modules.py (module with functions)
 Contains all functions used in run.py to execute the data extraction, train the word2vec models and extend the ontologies as described.
 
-`textmining(<string>)`:used for retrieval of text data from pdfs stored in ./import/ subdir. Preprocessed text containing only noun and propnoun token stored in pickle with name "name" in subdir ./pickle/.
+```
+textmining(<string>)
+```
+used for retrieval of text data from pdfs stored in ./import/ subdir. Preprocessed text containing only noun and propnoun token stored in pickle with name "name" in subdir ./pickle/.
 Raw read-in text stored as pickle "name_raw" in subdir ./pickle/.
 
-`concept_extractor(ontology_filenames = ["Allotrope_OWL"],
-
-                      use_IUPAC_goldbook = True, 
-
-                      min_count_list = [1],
-
-                      preprocessed_text_pickle_name = "methanation_only_text",
-
-                      gb_muted = True):`
+```
+concept_dictionary, metrics = w2v_ext.concept_extractor(Onto_filenames,
+                                                        use_IUPAC_goldbook,
+                                                        min_counts_list,
+                                                        pickle_name,
+                                                        goldbook_mute)
+```
 Loads semantic artifacts, loads text-pickle and trains w2v model with desired min_count(s). Outputs list of token and definitions based on min_count list and "statistics"/metrics as excel-files in subdir ./xlsx-files/ trained word2vec models are pickled in subdir ./models/
+Also outputs concept_dictionary, a dictionary containing all common labels of text data and ontologies respective to min_counts.
+
+
 
 ## todo:
 Ontology_normalizer_w2v_MC1-25.py -> Annotates classes in extended ontology with definitions
