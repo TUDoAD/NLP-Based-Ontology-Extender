@@ -1085,7 +1085,7 @@ def ontology_class_annotator(ontology_files_to_extend = ["./ontologies_output/Al
                             print("def of {} found in ontology {}".format(classlabel[0], loaded_onto))
                     else:
                         comment_string = "["+provenance_string+"] Class with same label also contained in [{}] unable to obtain definition string".format(loaded_onto)
-                   
+                        
                     # search the class with label according to classlabel and insert comment string as rdfs:comment
                     onto_local.search_one(label = classlabel[0]).comment.append(comment_string)
             
