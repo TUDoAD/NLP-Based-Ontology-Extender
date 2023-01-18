@@ -33,7 +33,6 @@ import json
 import types
 
 from owlready2 import *
-from tqdm import tqdm
 
 ####
 
@@ -998,7 +997,7 @@ def ontology_class_extender(ontology_filenames = ["SBO"],
 # AB HIER WEITER
 ##
     
-def ontology_class_annotator(ontology_files_to_extend = ["./ontologies_output/Allotrope_OWL_ext_methanation_only_text_mc1_0.999"],
+def ontology_class_annotator(ontology_files_to_annotate = ["./ontologies_output/Allotrope_OWL_ext_methanation_only_text_mc1_0.999"],
                             ontology_filenames = ["Allotrope_OWL"],
                             use_IUPAC_goldbook = True,
                             provenance_string = "AB",
@@ -1008,7 +1007,7 @@ def ontology_class_annotator(ontology_files_to_extend = ["./ontologies_output/Al
 
     Parameters
     ----------
-    ontology_files_to_extend : TYPE, optional
+    ontology_files_to_annotate : TYPE, optional
         DESCRIPTION. The default is ["./ontologies_output/Allotrope_OWL_ext_methanation_only_text_mc1_0.999"].
     ontology_filenames : TYPE, optional
         DESCRIPTION. The default is ["Allotrope_OWL"].
@@ -1027,7 +1026,7 @@ def ontology_class_annotator(ontology_files_to_extend = ["./ontologies_output/Al
     """
     json_filenames = []
     
-    for ontology_filename in ontology_files_to_extend:
+    for ontology_filename in ontology_files_to_annotate:
         
         local_world = owlready2.World()
         onto_local = local_world.get_ontology(ontology_filename + ".owl").load()
@@ -1047,7 +1046,6 @@ def ontology_class_annotator(ontology_files_to_extend = ["./ontologies_output/Al
         onto_local.save(file = ontology_filename + "_output.owl")
         
         label_list = [i.label[0] for i in list_classes]
-        labels_to_classes_dict = {i.label[0] : i for i in list_classes}
 
         [class_dict, desc_dict] = onto_loader(ontology_filenames)
         

@@ -49,9 +49,15 @@ metrics_onto_extension = w2v_ext.ontology_class_extender(Onto_filenames_ext,
                                                          mute_prints)
 
 # metrics_onto_extension["filenames"] contains the location + names of extended ontologies in subdir ./ontologies_output/
-list_of_ontologies = metrics_onto_extension["filenames"]
+list_of_ontologies_to_annotate = metrics_onto_extension["filenames"]
+# to denote automatically annotated strings with [provenance string]
+provenance_string = "AB"
 
-w2v_ext.ontology_class_annotator(list_of_ontologies)
+metrics_onto_annotation =  w2v_ext.ontology_class_annotator(list_of_ontologies_to_annotate,
+                                                            Onto_filenames,
+                                                            use_IUPAC_goldbook,
+                                                            provenance_string,
+                                                            mute_prints)
 
 #
 

@@ -49,11 +49,11 @@ Loads semantic artifacts and text-pickle to train w2v model with desired min_cou
 Returns metrics as dict and stores them as excel-file in subdir `./xlsx-files/`.
 
 ```
-w2v_ext.ontology_class_annotator(ontology_files_to_extend = ["./ontologies_output/Allotrope_OWL_ext_methanation_only_text_mc1_0.999"],
-                            ontology_filenames = ["Allotrope_OWL"],
-                            use_IUPAC_goldbook = True,
-                            provenance_string = "AB",
-                            mute_prints = True):
+metrics_onto_annotation =  w2v_ext.ontology_class_annotator(list_of_ontologies_to_annotate,
+                                                            Onto_filenames,
+                                                            use_IUPAC_goldbook,
+                                                            provenance_string,
+                                                            mute_prints)
 ```
 Annotates classes in extended ontology with definitions from other semantic artifacts (string values) and stores the annotated input ontology in `./ontologies_output/` with name ending "_output.owl".
 Stores number of unique keys and classes added as json-files in subdir `./json-files/`for metrics as files ending with "_new_classes.json". 
