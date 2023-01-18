@@ -48,9 +48,10 @@ metrics_onto_extension = w2v_ext.ontology_class_extender(Onto_filenames_ext,
                                                          similarity_threshold_list,
                                                          mute_prints)
 
+# metrics_onto_extension["filenames"] contains the location + names of extended ontologies in subdir ./ontologies_output/
+list_of_ontologies = metrics_onto_extension["filenames"]
 
-
-w2v_ext.ontology_class_annotator()
+w2v_ext.ontology_class_annotator(list_of_ontologies)
 
 #
 
