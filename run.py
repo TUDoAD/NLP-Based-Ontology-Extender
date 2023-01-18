@@ -38,7 +38,11 @@ Onto_filenames_ext = ["bao_complete_merged", "chebi", "chmo", "NCIT", "SBO"]
 extend_ontology = "Allotrope_OWL"
 #min_counts_list = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,50,100]   
 similarity_threshold_list = [0.8,0.9,0.95,0.99,0.995,0.996,0.997,0.998,0.999]
+# to denote automatically annotated strings with [provenance string]
+provenance_string = "AB"
+
 mute_prints = True
+
 
 metrics_onto_extension = w2v_ext.ontology_class_extender(Onto_filenames_ext,
                                                          use_IUPAC_goldbook,
@@ -46,12 +50,11 @@ metrics_onto_extension = w2v_ext.ontology_class_extender(Onto_filenames_ext,
                                                          min_counts_list,
                                                          pickle_name,
                                                          similarity_threshold_list,
+                                                         provenance_string,
                                                          mute_prints)
 
 # metrics_onto_extension["filenames"] contains the location + names of extended ontologies in subdir ./ontologies_output/
 list_of_ontologies_to_annotate = metrics_onto_extension["filenames"]
-# to denote automatically annotated strings with [provenance string]
-provenance_string = "AB"
 
 metrics_onto_annotation =  w2v_ext.ontology_class_annotator(list_of_ontologies_to_annotate,
                                                             Onto_filenames,

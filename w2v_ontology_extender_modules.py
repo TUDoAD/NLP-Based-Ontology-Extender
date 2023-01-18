@@ -74,12 +74,12 @@ def get_pdf_file_content(pdf_file):
 
     Parameters
     ----------
-    pdf_file : TYPE
+    pdf_file : STR
         DESCRIPTION.
 
     Returns
     -------
-    text : TYPE
+    text : STR
         DESCRIPTION.
 
     """
@@ -745,16 +745,13 @@ def concept_extractor(ontology_filenames = ["Allotrope_OWL"],
     
     return concept_dict,statistics_dict_res
 
-"""
-AB HIER WEITER
-"""
-
 def ontology_class_extender(ontology_filenames = ["SBO"], 
                             use_IUPAC_goldbook = True,
                             extend_ontology_name = 'Allotrope_OWL',
                             min_count_list = [1],
                             preprocessed_text_pickle_name = "methanation_only_text",
                             similarity_threshold_list = [0.999],
+                            provenance_string = "AB",
                             mute_prints = True): 
     """
     Extends "extend_ontology_name" by classes and relations and stores the modified ontologies in subdir "./ontologies_output/".
@@ -780,6 +777,8 @@ def ontology_class_extender(ontology_filenames = ["SBO"],
         DESCRIPTION. The default is "methanation_only_text".
     similarity_threshold_list : LIST of FLOAT, optional
         DESCRIPTION. The default is [0.999].
+    provenance_string : STR, optional
+        Provenance String. The default is [AB].
     mute_prints : BOOL, optional
         DESCRIPTION. The default is True.
 
@@ -883,11 +882,11 @@ def ontology_class_extender(ontology_filenames = ["SBO"],
             with onto_local:
                 class w2vConcept(Thing):
                     prefLabel = 'w2vConcept'#change here, if prefLabel is not correct for ontology to be extended
-                    definition = 'A concept generated automatically by [AB] to gather all concepts added by word2vec'
+                    definition = "A concept generated automatically by ["+ provenance_string +"] to gather all concepts added by word2vec"
                 class conceptually_related_to(ObjectProperty):
                     prefLabel = 'conceptually related to'#change here, if prefLabel is not correct for ontology to be extended
-                    definition = 'Created automatically by [AB] to specify relations of concepts to newly introduced concepts by word-vector similarity.'
-                    python_name = "conceptRelTo"
+                    definition = "Created automatically by [" + provenance_string + "] to specify relations of concepts to newly introduced concepts by word-vector similarity."
+                    #python_name = "conceptRelTo"
                     
             for concept in resDict[extend_ontology_name]:
                 # iterates through classes of resDict and temp_class = class of the 
@@ -920,7 +919,7 @@ def ontology_class_extender(ontology_filenames = ["SBO"],
                             # assign new class i as subclass of temp_class:    
                             # new_class = types.new_class(i, (temp_class,))
                             new_class = types.new_class(i,(w2vConcept,) )
-                            new_class.comment.append('Created automatically by [AB] based on word2vec output of concept name "{}"'.format(concept[0]))
+                            new_class.comment.append("Created automatically by ["+provenance_string+"] based on word2vec output of concept name '{}'".format(concept[0]))
                             #new_class.conceptually_related_to = [temp_class]
                             new_class.is_a.append(conceptually_related_to.some(temp_class))                       
 
@@ -942,11 +941,11 @@ def ontology_class_extender(ontology_filenames = ["SBO"],
                         pass
                     else:
                         if defstring:
-                            comment_string = defstring + "\nFound by [AB] in [" + ontology_names + "]"
+                            comment_string = defstring + "\nFound by ["+provenance_string+ "] in [" + ontology_names + "]"
                             if not mute_prints:
                                 print("def of {} found in ontology {}".format(classlabel, ontology_names))
                         else:
-                            comment_string = "[AB] Class with same label also contained in [{}] unable to obtain definition".format(ontology_names)
+                            comment_string = "["+provenance_string+"] Class with same label also contained in [{}] unable to obtain definition".format(ontology_names)
                     
                     w2vConceptClass.comment.append(comment_string)
 
