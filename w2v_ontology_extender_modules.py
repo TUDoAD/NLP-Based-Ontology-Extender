@@ -981,7 +981,7 @@ def ontology_class_extender(ontology_filenames = ["SBO"],
             Onto_World = None
             onto_local = None
             
-    metrics_dict = {'filename':onto_resulting_filenames,'min_count': modelname_metrics_list,'similarity_threshold':sim_list,'new_classes':new_classes_list,'unique_keys':unique_list, 'model_token_number':model_token_number, 'unique_len_all_concepts_found':unique_len_all_concepts_found}
+    metrics_dict = {'filenames':onto_resulting_filenames,'min_count': modelname_metrics_list,'similarity_threshold':sim_list,'new_classes':new_classes_list,'unique_keys':unique_list, 'model_token_number':model_token_number, 'unique_len_all_concepts_found':unique_len_all_concepts_found}
     
     print("=============================================")  
     df = pd.DataFrame(metrics_dict)
