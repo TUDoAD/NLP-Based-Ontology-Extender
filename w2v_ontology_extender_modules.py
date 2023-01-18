@@ -947,7 +947,7 @@ def ontology_class_extender(ontology_filenames = ["SBO"],
                         else:
                             comment_string = "["+provenance_string+"] Class with same label also contained in [{}] unable to obtain definition".format(ontology_names)
                     
-                    w2vConceptClass.comment.append(comment_string)
+                        w2vConceptClass.comment.append(comment_string)
 
             onto_savestring = './ontologies_output/' + extend_ontology_name + '_ext_' + model_name + '_' + str(similarity_threshold) + '.owl'
             onto_local.save(file = onto_savestring)  
@@ -1098,10 +1098,10 @@ def ontology_class_annotator(ontology_files_to_annotate = ["./ontologies_output/
         found_concepts = set(tempVar)
         resDict["unique_keys"] = len(found_concepts)
         resDict["new_classes"] = w2vSubclasses
-        with open("./json-files/"+ ontology_filename + "_new_classes.json", 'w') as f:
+        with open("./json-files/"+ ontology_filename.lstrip("./ontologies_output/") + "_new_classes.json", 'w') as f:
                 json.dump(resDict, f)
         
-        json_filenames.append("./json-files/"+ ontology_filename + "_new_classes.json")
+        json_filenames.append("./json-files/"+ ontology_filename.lstrip("./ontologies_output/") + "_new_classes.json")
     
     ## Export metrics of extended ontologies
     metrics_dict = {}
