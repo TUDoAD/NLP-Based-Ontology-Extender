@@ -1,5 +1,5 @@
 # NLP-Based-Ontology-Extender
-This repository contains the codes for the NLP-Based-Ontology-Extender by Alexander S. Behr, TU Dortmund University, created in context of NFDI4Cat TA1. 
+This repository contains the codes for the NLP-Based-Ontology-Extender by Alexander S. Behr, TU Dortmund University, created in context of NFDI4Cat TA1 and published here: https://doi.org/10.1007/s10115-023-01919-1 .
 The code can be used to extend ontologies automatically based on text data with help of Word2Vec.
 
 **Needed modules (list may not be complete!):**
